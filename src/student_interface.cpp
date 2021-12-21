@@ -60,7 +60,34 @@ namespace student
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &path, const std::string &config_folder)
     {
+        // print borders list
+        for (int i = 0; i < borders.size(); i++)
+        {
+            std::cout << "Border " << i << ": (" << borders[i].x << ", " << borders[i].y << ") points" << std::endl;
+        }
 
+        // print obstacle list
+        for (int i = 0; i < obstacle_list.size(); i++)
+        {
+            for (int j = 0; j < obstacle_list[i].size(); j++)
+            {
+                std::cout << "Obstacle " << i << ": (" << obstacle_list[i][j].x << ", " << obstacle_list[i][j].y << ") points" << std::endl;
+            }
+        }
 
+        // print gate list
+        for (int i = 0; i < gate_list.size(); i++)
+        {
+            for (int j = 0; j < obstacle_list[i].size(); j++)
+            {
+                std::cout << "Gate " << i << ": (" << gate_list[i][j].x << ", " << gate_list[i][j].y << ") points" << std::endl;
+            }
+        }
 
+        // print x, y, theta
+        for (int i = 0; i < x.size(); i++)
+        {
+            std::cout << "Robot " << i << ": (" << x[i] << ", " << y[i] << ", " << theta[i] << ")" << std::endl;
+        }
+    }
 }
