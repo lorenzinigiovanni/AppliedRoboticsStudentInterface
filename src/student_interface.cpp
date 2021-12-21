@@ -1,5 +1,7 @@
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
+#include "cell_decomposition.hpp"
+#include "line_offsetter.hpp"
 
 #include <stdexcept>
 #include <sstream>
@@ -89,5 +91,17 @@ namespace student
         {
             std::cout << "Robot " << i << ": (" << x[i] << ", " << y[i] << ", " << theta[i] << ")" << std::endl;
         }
+
+        // offsetting
+        // std::vector<Polygon> offsetted_borders = LineOffsetter::offset_obstacles(borders);
+        std::vector<Polygon> offsetted_obstacle_list = LineOffsetter::offset_obstacles(obstacle_list);
+
+        // cell decomposition
+        CellDecomposition cell_decomposition;
+        cell_decomposition.add_borders(borders); // da offsettare
+        cell_decomposition.add_obstacles(offsetted_obstacle_list);
+        cell_decomposition.create_cdt();
+        cell_decomposition.print_triangles();
+        cell_decomposition.show_triangles();
     }
 }
