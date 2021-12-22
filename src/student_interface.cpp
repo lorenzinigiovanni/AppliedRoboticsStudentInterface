@@ -46,7 +46,7 @@ namespace student
         throw std::logic_error("STUDENT FUNCTION - UNWRAP - NOT IMPLEMENTED");
     }
 
-    bool processMap(const cv::Mat &img_in, const double scale, std::vector<Polygon> &obstacle_list,
+    bool processMap(const cv::Mat &img_in, const double scale, std::vector<Polygon> &obstacles,
                     std::vector<std::pair<int, Polygon>> &victim_list, Polygon &gate, const std::string &config_folder)
     {
         throw std::logic_error("STUDENT FUNCTION - PROCESS MAP - NOT IMPLEMENTED");
@@ -58,29 +58,29 @@ namespace student
         throw std::logic_error("STUDENT FUNCTION - FIND ROBOT - NOT IMPLEMENTED");
     }
 
-    bool planPath(const Polygon &borders, const std::vector<Polygon> &obstacle_list, const std::vector<Polygon> &gate_list,
+    bool planPath(const Polygon &border, const std::vector<Polygon> &obstacles, const std::vector<Polygon> &gate_list,
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &path, const std::string &config_folder)
     {
-        // print borders list
-        for (int i = 0; i < borders.size(); i++)
+        // print border
+        for (int i = 0; i < border.size(); i++)
         {
-            std::cout << "Border " << i << ": (" << borders[i].x << ", " << borders[i].y << ") points" << std::endl;
+            std::cout << "Border " << i << ": (" << border[i].x << ", " << border[i].y << ") points" << std::endl;
         }
 
         // print obstacle list
-        for (int i = 0; i < obstacle_list.size(); i++)
+        for (int i = 0; i < obstacles.size(); i++)
         {
-            for (int j = 0; j < obstacle_list[i].size(); j++)
+            for (int j = 0; j < obstacles[i].size(); j++)
             {
-                std::cout << "Obstacle " << i << ": (" << obstacle_list[i][j].x << ", " << obstacle_list[i][j].y << ") points" << std::endl;
+                std::cout << "Obstacle " << i << ": (" << obstacles[i][j].x << ", " << obstacles[i][j].y << ") points" << std::endl;
             }
         }
 
         // print gate list
         for (int i = 0; i < gate_list.size(); i++)
         {
-            for (int j = 0; j < obstacle_list[i].size(); j++)
+            for (int j = 0; j < obstacles[i].size(); j++)
             {
                 std::cout << "Gate " << i << ": (" << gate_list[i][j].x << ", " << gate_list[i][j].y << ") points" << std::endl;
             }
@@ -93,13 +93,19 @@ namespace student
         }
 
         // offsetting
-        // std::vector<Polygon> offsetted_borders = LineOffsetter::offset_obstacles(borders);
-        std::vector<Polygon> offsetted_obstacle_list = LineOffsetter::offset_obstacles(obstacle_list);
+        std::vector<Polygon> borders;
+        borders.push_back(border);
+        std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -50);
+        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 50);
+
+        // merge and intersection
+        std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
+        std::vector<Polygon> intersected_obstacles_borders = LineOffsetter::intersect_polygons(offsetted_borders, merged_obstacles);
 
         // cell decomposition
         CellDecomposition cell_decomposition;
-        cell_decomposition.add_borders(borders); // da offsettare
-        cell_decomposition.add_obstacles(offsetted_obstacle_list);
+        cell_decomposition.add_polygons(offsetted_borders);
+        cell_decomposition.add_polygons(intersected_obstacles_borders);
         cell_decomposition.create_cdt();
         cell_decomposition.print_triangles();
         cell_decomposition.show_triangles();
