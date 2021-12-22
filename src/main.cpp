@@ -1,11 +1,15 @@
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "clipper/clipper.hpp"
-#include "line_offsetter.hpp"
+    cell_decomposition.show_triangles();#include "line_offsetter.hpp"
 #include "cell_decomposition.hpp"
 #include <iostream>
 
 int main()
 {
+    unsigned int size_x = 1000;
+    unsigned int size_y = 800;
+    cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
+
     Polygon border = Polygon({Point(0, 0), Point(0, 1), Point(0.8, 1), Point(0.8, 0)});
 
     std::vector<Polygon> obstacles;
@@ -29,7 +33,11 @@ int main()
     cell_decomposition.add_polygons(intersected_paths_borders);
     cell_decomposition.create_cdt();
     cell_decomposition.print_triangles();
-    cell_decomposition.show_triangles();
+    cell_decomposition.show_triangles(img);
+
+
+    cv::imshow("Image", img);
+    cv::waitKey(0);
 
     return 0;
 }

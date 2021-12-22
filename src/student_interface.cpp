@@ -1,3 +1,5 @@
+#pragma once
+
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 #include "cell_decomposition.hpp"
@@ -92,6 +94,10 @@ namespace student
             std::cout << "Robot " << i << ": (" << x[i] << ", " << y[i] << ", " << theta[i] << ")" << std::endl;
         }
 
+        unsigned int size_x = 1000;
+        unsigned int size_y = 800;
+        cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
+
         // offsetting
         std::vector<Polygon> borders;
         borders.push_back(border);
@@ -108,6 +114,9 @@ namespace student
         cell_decomposition.add_polygons(intersected_obstacles_borders);
         cell_decomposition.create_cdt();
         cell_decomposition.print_triangles();
-        cell_decomposition.show_triangles();
+        cell_decomposition.show_triangles(img);
+
+        cv::imshow("Image", img);
+        cv::waitKey(0);
     }
 }
