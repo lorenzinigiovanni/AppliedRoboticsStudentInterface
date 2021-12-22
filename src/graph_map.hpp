@@ -27,74 +27,25 @@ public:
     void create_graph(std::vector<CDT::Triangle> &triangles, std::vector<Point> &points)
     {
         // For each triangle in our vector of triangles
-        for (size_t i = 0; i < triangles.size(); i++)
+        for (size_t triangle = 0; triangle < triangles.size(); triangle++)
         {
-            // Add triangle baricenter
-            GraphType::vertex_descriptor triangle_baricenter;
-            if (triangle_vertex_map.find(i) == triangle_vertex_map.end())
-            {
-                Point triangle_center = get_triangle_center(points[triangles[i].vertices[0]], points[triangles[i].vertices[1]], points[triangles[i].vertices[2]]);
-                triangle_baricenter = boost::add_vertex(triangle_center, graph);
-                triangle_vertex_map[i] = triangle_baricenter;
-            }
-            else
-            {
-                triangle_baricenter = triangle_vertex_map[i];
-            }
+            GraphType::vertex_descriptor triangle_baricenter = add_triangle_center(triangle, triangles, points);
 
             // For each neighbour of the triangle
-            for (int j = 0; j < triangles[i].neighbors.size(); j++)
+            for (int j = 0; j < triangles[triangle].neighbors.size(); j++)
             {
-                size_t neighbor = triangles[i].neighbors[j];
+                size_t neighbor = triangles[triangle].neighbors[j];
 
                 // If there is a valid neighbouring triangle
                 if (neighbor != 4294967295)
                 {
-                    // Add neighbour baricenter, if...
-                    GraphType::vertex_descriptor neighbor_triangle_baricenter;
-                    if (triangle_vertex_map.find(neighbor) == triangle_vertex_map.end())
-                    {
-                        Point neighbor_center = get_triangle_center(points[triangles[neighbor].vertices[0]], points[triangles[neighbor].vertices[1]], points[triangles[neighbor].vertices[2]]);
-                        neighbor_triangle_baricenter = boost::add_vertex(neighbor_center, graph);
-                        triangle_vertex_map[neighbor] = neighbor_triangle_baricenter;
-                    }
-                    else
-                    {
-                        neighbor_triangle_baricenter = triangle_vertex_map[neighbor];
-                    }
+                    GraphType::vertex_descriptor neighbor_baricenter = add_triangle_center(neighbor, triangles, points);
 
-                    // Find common points between triangles[i] and triangles[neighbour] (Comparison)
-                    std::vector<size_t> common_points;
-                    for (int k = 0; k < 3; k++)
-                    {
-                        for (int l = 0; l < 3; l++)
-                        {
-                            if (triangles[i].vertices[k] == triangles[neighbor].vertices[l])
-                            {
-                                common_points.push_back(triangles[i].vertices[k]);
-                            }
-                        }
-                    }
-
-                    std::set<size_t> triangle_neighbor_set = {i, neighbor};
-
-                    // If there's not already a point, add it
-                    GraphType::vertex_descriptor triangles_middlepoint;
-                    if (line_vertex_map.find(triangle_neighbor_set) == line_vertex_map.end())
-                    {
-                        Point neighbor_line_center = get_line_center(points[common_points[0]], points[common_points[1]]);
-                        triangles_middlepoint = boost::add_vertex(neighbor_line_center, graph);
-                        line_vertex_map[triangle_neighbor_set] = triangles_middlepoint;
-                    }
-                    else
-                    {
-                        // Add midpoint
-                        triangles_middlepoint = line_vertex_map[triangle_neighbor_set];
-                    }
+                    GraphType::vertex_descriptor triangles_middlepoint = add_line_between_triangles(triangle, neighbor, triangles, points);
 
                     // Add edges, the second parameter returns the result of the operation
                     std::pair<GraphType::edge_descriptor, bool> e1 = boost::add_edge(triangle_baricenter, triangles_middlepoint, graph);
-                    std::pair<GraphType::edge_descriptor, bool> e2 = boost::add_edge(neighbor_triangle_baricenter, triangles_middlepoint, graph);
+                    std::pair<GraphType::edge_descriptor, bool> e2 = boost::add_edge(neighbor_baricenter, triangles_middlepoint, graph);
                 }
             }
         }
@@ -105,7 +56,7 @@ public:
         boost::graph_traits<GraphType>::vertex_iterator v, v_end;
         for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
         {
-           int x = int(graph[*v].x * 500) + 50;
+            int x = int(graph[*v].x * 500) + 50;
             int y = img.size().height - int(graph[*v].y * 500) - 50;
 
             cv::circle(img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255), cv::FILLED);
@@ -123,6 +74,7 @@ public:
         }
     }
 
+private:
     Point get_line_center(Point &p1, Point &p2)
     {
         Point p;
@@ -137,5 +89,66 @@ public:
         p.x = (p1.x + p2.x + p3.x) / 3;
         p.y = (p1.y + p2.y + p3.y) / 3;
         return p;
+    }
+
+    GraphType::vertex_descriptor add_line_between_triangles(size_t t1, size_t t2, std::vector<CDT::Triangle> &triangles, std::vector<Point> &points)
+    {
+        std::vector<size_t> common_points;
+
+        for (int k = 0; k < 3; k++)
+        {
+            for (int l = 0; l < 3; l++)
+            {
+                if (triangles[t1].vertices[k] == triangles[t2].vertices[l])
+                {
+                    common_points.push_back(triangles[t1].vertices[k]);
+                }
+            }
+        }
+
+        std::set<size_t> triangle_neighbor_set = {t1, t2};
+
+        GraphType::vertex_descriptor triangles_middlepoint = add_line_center(triangle_neighbor_set, points[common_points[0]], points[common_points[1]]);
+        return triangles_middlepoint;
+    }
+
+    GraphType::vertex_descriptor add_line_center(std::set<size_t> index, Point &p1, Point &p2)
+    {
+        GraphType::vertex_descriptor line_baricenter;
+
+        if (line_vertex_map.find(index) == line_vertex_map.end())
+        {
+            Point neighbor_line_center = get_line_center(p1, p2);
+            line_baricenter = boost::add_vertex(neighbor_line_center, graph);
+            line_vertex_map[index] = line_baricenter;
+        }
+        else
+        {
+            line_baricenter = line_vertex_map[index];
+        }
+
+        return line_baricenter;
+    }
+
+    GraphType::vertex_descriptor add_triangle_center(size_t index, std::vector<CDT::Triangle> &triangles, std::vector<Point> &points)
+    {
+        Point p1 = points[triangles[index].vertices[0]];
+        Point p2 = points[triangles[index].vertices[1]];
+        Point p3 = points[triangles[index].vertices[2]];
+
+        GraphType::vertex_descriptor triangle_baricenter;
+
+        if (triangle_vertex_map.find(index) == triangle_vertex_map.end())
+        {
+            Point triangle_center = get_triangle_center(p1, p2, p3);
+            triangle_baricenter = boost::add_vertex(triangle_center, graph);
+            triangle_vertex_map[index] = triangle_baricenter;
+        }
+        else
+        {
+            triangle_baricenter = triangle_vertex_map[index];
+        }
+
+        return triangle_baricenter;
     }
 };
