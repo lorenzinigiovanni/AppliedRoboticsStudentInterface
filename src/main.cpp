@@ -1,7 +1,8 @@
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "clipper/clipper.hpp"
-    cell_decomposition.show_triangles();#include "line_offsetter.hpp"
+#include "line_offsetter.hpp"
 #include "cell_decomposition.hpp"
+#include "graph_map.hpp"
 #include <iostream>
 
 int main()
@@ -35,6 +36,9 @@ int main()
     cell_decomposition.print_triangles();
     cell_decomposition.show_triangles(img);
 
+    GraphMap graph_map;
+    graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
+    graph_map.show_graph(img);
 
     cv::imshow("Image", img);
     cv::waitKey(0);
