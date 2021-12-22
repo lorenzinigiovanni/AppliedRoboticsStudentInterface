@@ -31,34 +31,34 @@ class CellDecomposition
     std::vector<Edge> edges;
 
 public:
-    void add_borders(const Polygon &borders)
+    void add_polygon(const Polygon &polygon)
     {
-        for (int i = 0; i < borders.size(); i++)
+        for (int i = 0; i < polygon.size(); i++)
         {
-            points.push_back(Point(borders[i].x, borders[i].y));
+            points.push_back(Point(polygon[i].x, polygon[i].y));
             point_count++;
             if (i > 0)
             {
                 edges.push_back(Edge(point_count - 1, point_count - 2));
             }
         }
-        edges.push_back(Edge(point_count - 1, point_count - borders.size()));
+        edges.push_back(Edge(point_count - 1, point_count - polygon.size()));
     }
 
-    void add_obstacles(const std::vector<Polygon> &obstacles)
+    void add_polygons(const std::vector<Polygon> &polygons)
     {
-        for (int i = 0; i < obstacles.size(); i++)
+        for (int i = 0; i < polygons.size(); i++)
         {
-            for (int j = 0; j < obstacles[i].size(); j++)
+            for (int j = 0; j < polygons[i].size(); j++)
             {
-                points.push_back(Point(obstacles[i][j].x, obstacles[i][j].y));
+                points.push_back(Point(polygons[i][j].x, polygons[i][j].y));
                 point_count++;
                 if (j > 0)
                 {
                     edges.push_back(Edge(point_count - 1, point_count - 2));
                 }
             }
-            edges.push_back(Edge(point_count - 1, point_count - obstacles[i].size()));
+            edges.push_back(Edge(point_count - 1, point_count - polygons[i].size()));
         }
     }
 
@@ -113,7 +113,7 @@ public:
                 cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 255, 255), 1, 8);
             }
         }
-
+        
         cv::imshow("Cell decomposition", img);
         cv::waitKey(0);
     }
