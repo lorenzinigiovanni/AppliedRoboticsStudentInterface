@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "CDT/CDT.h"
 #include <opencv2/core.hpp>
@@ -24,18 +26,20 @@ public:
 
 class CellDecomposition
 {
+private:
     CDT::Triangulation<float> cdt;
-
-    std::vector<Point> points;
     std::size_t point_count = 0;
-    std::vector<Edge> edges;
 
 public:
+    std::vector<Point> points;
+    std::vector<Edge> edges;
+    std::vector<CDT::Triangle> triangles;
+
     void add_polygon(const Polygon &polygon)
     {
         for (int i = 0; i < polygon.size(); i++)
         {
-            points.push_back(Point(polygon[i].x, polygon[i].y));
+            points.push_back(polygon[i]);
             point_count++;
             if (i > 0)
             {
@@ -51,7 +55,7 @@ public:
         {
             for (int j = 0; j < polygons[i].size(); j++)
             {
-                points.push_back(Point(polygons[i][j].x, polygons[i][j].y));
+                points.push_back(polygons[i][j]);
                 point_count++;
                 if (j > 0)
                 {
@@ -82,11 +86,13 @@ public:
 
         // cdt.eraseSuperTriangle();
         cdt.eraseOuterTrianglesAndHoles();
+
+        triangles = cdt.triangles;
     }
 
     void print_triangles()
     {
-        for (CDT::TriangleVec::iterator t = cdt.triangles.begin(); t != cdt.triangles.end(); ++t)
+        for (CDT::TriangleVec::iterator t = triangles.begin(); t != triangles.end(); ++t)
         {
             std::cout << "Triangle: " << t->vertices[0] << " " << t->vertices[1] << " " << t->vertices[2] << std::endl;
         }
