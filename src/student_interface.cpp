@@ -1,5 +1,3 @@
-#pragma once
-
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 #include "cell_decomposition.hpp"
