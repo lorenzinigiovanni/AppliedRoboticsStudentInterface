@@ -4,6 +4,7 @@
 #include "student_planning_interface.hpp"
 #include "cell_decomposition.hpp"
 #include "line_offsetter.hpp"
+#include "graph_map.hpp"
 
 #include <stdexcept>
 #include <sstream>
@@ -115,6 +116,10 @@ namespace student
         cell_decomposition.create_cdt();
         cell_decomposition.print_triangles();
         cell_decomposition.show_triangles(img);
+
+        GraphMap graph_map;
+        graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
+        graph_map.show_graph(img);
 
         cv::imshow("Image", img);
         cv::waitKey(0);
