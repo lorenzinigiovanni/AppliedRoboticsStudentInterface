@@ -8,6 +8,7 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <chrono>
 
 namespace student
 {
@@ -95,6 +96,8 @@ namespace student
             std::cout << "Robot " << i << ": (" << x[i] << ", " << y[i] << ", " << theta[i] << ")" << std::endl;
         }
 
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
         unsigned int size_x = 1000;
         unsigned int size_y = 800;
         cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
@@ -120,6 +123,10 @@ namespace student
         GraphMap graph_map;
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
         graph_map.show_graph(img);
+
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
 
         cv::imshow("Image", img);
         cv::waitKey(0);
