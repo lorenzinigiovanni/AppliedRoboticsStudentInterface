@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "clipper/clipper.hpp"
 
