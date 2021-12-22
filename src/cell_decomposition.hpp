@@ -1,9 +1,11 @@
-#include "utils.hpp"
+#include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "CDT/CDT.h"
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv/cv.hpp>
 
+#include <iostream>
 #include <stdexcept>
 #include <sstream>
 
@@ -92,7 +94,10 @@ public:
 
     void show_triangles()
     {
-        cv::Mat img = cv::Mat(1000, 1000, CV_8UC3);
+        unsigned int size_x = 1000;
+        unsigned int size_y = 800;
+
+        cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
 
         for (CDT::TriangleVec::iterator t = cdt.triangles.begin(); t != cdt.triangles.end(); ++t)
         {
@@ -100,16 +105,16 @@ public:
             {
                 Point p1 = points[t->vertices[i]];
                 Point p2 = points[t->vertices[(i + 1) % 3]];
-                int x1 = int(p1.x * 500) + 10;
-                int y1 = int(p1.y * 500) + 10;
-                int x2 = int(p2.x * 500) + 10;
-                int y2 = int(p2.y * 500) + 10;
+                int x1 = int(p1.x * 500) + 50;
+                int y1 = size_y - int(p1.y * 500) - 50;
+                int x2 = int(p2.x * 500) + 50;
+                int y2 = size_y - int(p2.y * 500) - 50;
 
                 cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 255, 255), 1, 8);
             }
         }
 
-        cv::imshow("Nome", img);
+        cv::imshow("Cell decomposition", img);
         cv::waitKey(0);
     }
 };
