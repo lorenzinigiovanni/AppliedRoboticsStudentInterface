@@ -13,6 +13,10 @@ int main()
 
     Polygon border = Polygon({Point(0, 0), Point(0, 1), Point(0.8, 1), Point(0.8, 0)});
 
+    std::vector<Polygon> gates;
+    gates.push_back(Polygon({Point(0.2, 0), Point(0.4, 0), Point(0.4, 0.2), Point(0.2, 0.2)}));
+    gates.push_back(Polygon({Point(0.8, 0.9), Point(1, 0.9), Point(1, 1), Point(0.8, 1)}));
+
     std::vector<Polygon> obstacles;
     obstacles.push_back(Polygon({Point(0.2, 0.2), Point(0.2, 0.4), Point(0.4, 0.4), Point(0.4, 0.2)}));
     obstacles.push_back(Polygon({Point(0.35, 0.35), Point(0.35, 0.65), Point(0.65, 0.65), Point(0.65, 0.35)}));
@@ -38,6 +42,7 @@ int main()
 
     GraphMap graph_map;
     graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
+    graph_map.add_gates(gates);
     graph_map.show_graph(img);
 
     cv::imshow("Image", img);
