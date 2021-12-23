@@ -108,10 +108,6 @@ public:
         boost::graph_traits<GraphType>::edge_iterator e, e_end;
         for (boost::tie(e, e_end) = boost::edges(graph); e != e_end; ++e)
         {
-            std::cout << "p1: " << std::fixed << std::setprecision(3) << graph[boost::source(*e, graph)].point << "\t"
-                      << "p2: " << std::fixed << std::setprecision(3) << graph[boost::target(*e, graph)].point << "\t"
-                      << "distance: " << EdgeWeightMap[*e] << std::endl;
-
             int x1 = int(graph[e->m_source].point.x * 500) + 50;
             int y1 = img.size().height - int(graph[e->m_source].point.y * 500) - 50;
             int x2 = int(graph[e->m_target].point.x * 500) + 50;
