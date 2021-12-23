@@ -120,6 +120,7 @@ namespace student
 
         GraphMap graph_map;
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
+        graph_map.add_gates(gates);
         graph_map.show_graph(img);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
