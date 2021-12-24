@@ -3,6 +3,7 @@
 #include "line_offsetter.hpp"
 #include "cell_decomposition.hpp"
 #include "graph_map.hpp"
+#include "planner.hpp"
 #include <iostream>
 
 int main()
@@ -62,6 +63,12 @@ int main()
     graph_map.add_gates(gates);
     graph_map.add_robots(x, y);
     graph_map.show_graph(img);
+
+    Planner planner("pursuer.problem", graph_map);
+    planner.write_problem();
+    planner.generate_plan();
+    std::vector<Point> path = planner.extract_path_from_plan();
+    planner.show_plan(img);
 
     cv::imshow("Image", img);
     cv::waitKey(0);
