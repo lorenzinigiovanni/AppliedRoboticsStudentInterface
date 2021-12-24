@@ -19,6 +19,7 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include <string>
 
 class GraphMap
 {
@@ -190,6 +191,58 @@ public:
 
             cv::circle(img, cv::Point(x, y), 5, color, cv::FILLED);
         }
+    }
+
+    std::string get_locations()
+    {
+        std::string data;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            data += "l" + std::to_string(i) + " ";
+        }
+
+        data += "- location";
+
+        return data;
+    }
+
+    std::string get_robots_locations()
+    {
+        // (at r1 l0)
+        std::string data;
+
+        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
+        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+        {
+            if (graph[*v].type == PURSUER)
+            {
+                data += "(at r1 l" + std::to_string(*v) + ")\n";
+            }
+            else if (graph[*v].type == ESCAPER)
+            {
+                data += "(at r2 l" + std::to_string(*v) + ")\n";
+            }
+        }
+        return data;
+    }
+
+    std::string get_locations_relations()
+    {
+        std::string data;
+
+        boost::graph_traits<GraphType>::edge_iterator e, e_end;
+        for (boost::tie(e, e_end) = boost::edges(graph); e != e_end; ++e)
+        {
+            data += "(near l" + std::to_string(e->m_source) + " l" + std::to_string(e->m_target) + ")\n";
+        }
+
+        return data;
+    }
+
+    Point point_from_index(int i)
+    {
+        return graph[i].point;
     }
 
 private:
