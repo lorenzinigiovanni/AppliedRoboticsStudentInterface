@@ -11,6 +11,23 @@ int main()
     unsigned int size_y = 800;
     cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
 
+    // Robot locations
+    std::vector<float> x;
+    std::vector<float> y;
+    std::vector<float> theta;
+    
+    x.push_back(0.15);
+    x.push_back(0.45);
+    x.push_back(0.0);
+
+    y.push_back(0.15);
+    y.push_back(0.65);
+    y.push_back(0.0);
+
+    theta.push_back(0.0);
+    theta.push_back(0.0);
+    theta.push_back(0.0);
+
     Polygon border = Polygon({Point(0, 0), Point(0, 1), Point(0.8, 1), Point(0.8, 0)});
 
     std::vector<Polygon> gates;
@@ -43,6 +60,7 @@ int main()
     GraphMap graph_map;
     graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
     graph_map.add_gates(gates);
+    graph_map.add_robots(x, y);
     graph_map.show_graph(img);
 
     cv::imshow("Image", img);
