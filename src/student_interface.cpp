@@ -3,6 +3,7 @@
 #include "cell_decomposition.hpp"
 #include "line_offsetter.hpp"
 #include "graph_map.hpp"
+#include "planner.hpp"
 
 #include <stdexcept>
 #include <sstream>
@@ -115,13 +116,20 @@ namespace student
         cell_decomposition.add_polygons(offsetted_borders);
         cell_decomposition.add_polygons(intersected_obstacles_borders);
         cell_decomposition.create_cdt();
-        cell_decomposition.print_triangles();
+        // cell_decomposition.print_triangles();
         cell_decomposition.show_triangles(img);
 
         GraphMap graph_map;
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
         graph_map.add_gates(gates);
+        graph_map.add_robots(x, y);
         graph_map.show_graph(img);
+
+        Planner planner("pursuer.problem", graph_map);
+        planner.write_problem();
+        planner.generate_plan();
+        std::vector<Point> planned_path = planner.extract_path_from_plan();
+        planner.show_plan(img);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
