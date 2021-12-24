@@ -63,7 +63,7 @@ namespace student
 
     bool planPath(const Polygon &border, const std::vector<Polygon> &obstacles, const std::vector<Polygon> &gates,
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
-                  std::vector<Path> &path, const std::string &config_folder)
+                  std::vector<Path> &paths, const std::string &config_folder)
     {
         // print border
         for (int i = 0; i < border.size(); i++)
