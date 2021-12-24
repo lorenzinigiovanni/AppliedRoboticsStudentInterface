@@ -29,12 +29,15 @@ int main()
     theta.push_back(0.0);
     theta.push_back(0.0);
 
+    // Borders arena
     Polygon border = Polygon({Point(0, 0), Point(0, 1), Point(0.8, 1), Point(0.8, 0)});
 
+    // Gate positions
     std::vector<Polygon> gates;
     gates.push_back(Polygon({Point(0.2, 0), Point(0.4, 0), Point(0.4, 0.2), Point(0.2, 0.2)}));
-    gates.push_back(Polygon({Point(0.8, 0.9), Point(1, 0.9), Point(1, 1), Point(0.8, 1)}));
+    gates.push_back(Polygon({Point(0.6, 0.9), Point(0.8, 0.9), Point(0.8, 1), Point(0.6, 1)}));
 
+    // Obstacle position
     std::vector<Polygon> obstacles;
     obstacles.push_back(Polygon({Point(0.2, 0.2), Point(0.2, 0.4), Point(0.4, 0.4), Point(0.4, 0.2)}));
     obstacles.push_back(Polygon({Point(0.35, 0.35), Point(0.35, 0.65), Point(0.65, 0.65), Point(0.65, 0.35)}));
@@ -55,7 +58,7 @@ int main()
     cell_decomposition.add_polygons(offsetted_borders);
     cell_decomposition.add_polygons(intersected_paths_borders);
     cell_decomposition.create_cdt();
-    cell_decomposition.print_triangles();
+    // cell_decomposition.print_triangles();
     cell_decomposition.show_triangles(img);
 
     GraphMap graph_map;
