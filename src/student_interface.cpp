@@ -65,36 +65,6 @@ namespace student
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &paths, const std::string &config_folder)
     {
-        // print border
-        for (int i = 0; i < border.size(); i++)
-        {
-            std::cout << "Border " << i << ": (" << border[i].x << ", " << border[i].y << ") points" << std::endl;
-        }
-
-        // print obstacle list
-        for (int i = 0; i < obstacles.size(); i++)
-        {
-            for (int j = 0; j < obstacles[i].size(); j++)
-            {
-                std::cout << "Obstacle " << i << ": (" << obstacles[i][j].x << ", " << obstacles[i][j].y << ") points" << std::endl;
-            }
-        }
-
-        // print gate list
-        for (int i = 0; i < gates.size(); i++)
-        {
-            for (int j = 0; j < obstacles[i].size(); j++)
-            {
-                std::cout << "Gate " << i << ": (" << gates[i][j].x << ", " << gates[i][j].y << ") points" << std::endl;
-            }
-        }
-
-        // print x, y, theta
-        for (int i = 0; i < x.size(); i++)
-        {
-            std::cout << "Robot " << i << ": (" << x[i] << ", " << y[i] << ", " << theta[i] << ")" << std::endl;
-        }
-
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
         unsigned int size_x = 1000;
