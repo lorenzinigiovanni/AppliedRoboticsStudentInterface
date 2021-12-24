@@ -29,7 +29,9 @@ class GraphMap
     enum PointType
     {
         GATE,
-        WAYPOINT
+        WAYPOINT,
+        PURSUER,
+        ESCAPER,
     };
 
     class VertexProperty
@@ -108,6 +110,46 @@ public:
         }
     }
 
+    void add_robots(const std::vector<float> x, const std::vector<float> y)
+    {
+        for (int i = 0; i < 2; i++) // Robot number
+        {
+            PointType robot_type;
+            if (i == 0)
+            {
+                robot_type = PURSUER;
+            }
+            else
+            {
+                robot_type = ESCAPER;
+            }
+
+            VertexProperty property(Point(x[i], y[i]), robot_type);
+            GraphType::vertex_descriptor robot_center = boost::add_vertex(property, graph);
+            GraphType::vertex_descriptor near_waypoint;
+
+            float tmpDistance = 1000.0;
+
+            boost::graph_traits<GraphType>::vertex_iterator v, v_end;
+            for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+            {
+                if (graph[*v].type == WAYPOINT)
+                {
+                    float distance = distance_btw_points(*v, robot_center);
+                    if (distance < tmpDistance)
+                    {
+                        tmpDistance = distance;
+                        near_waypoint = *v;
+                    }
+                }
+
+                // To do: if graph[*v].type == PURSUER || graph[*v].type == ESCAPER --> Insert Edge more accordingly
+            }
+
+            std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(robot_center, near_waypoint, {tmpDistance}, graph);
+        }
+    }
+
     void show_graph(cv::Mat &img)
     {
         boost::graph_traits<GraphType>::edge_iterator e, e_end;
@@ -136,6 +178,14 @@ public:
             else if (graph[*v].type == WAYPOINT)
             {
                 color = cv::Scalar(50, 50, 255);
+            }
+            else if (graph[*v].type == PURSUER)
+            {
+                color = cv::Scalar(255, 0, 230);
+            }
+            else if (graph[*v].type == ESCAPER)
+            {
+                color = cv::Scalar(0, 90, 170);
             }
 
             cv::circle(img, cv::Point(x, y), 5, color, cv::FILLED);
