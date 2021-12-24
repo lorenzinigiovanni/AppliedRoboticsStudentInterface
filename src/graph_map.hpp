@@ -4,6 +4,11 @@
 #include "CDT/CDT.h"
 #include "boost/graph/adjacency_list.hpp"
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv/cv.hpp>
+
 #include <iterator>
 #include <iostream>
 #include <stdexcept>
