@@ -34,3 +34,7 @@ boost/
 *.exe
 *.out
 *.app
+
+# Planner
+sas_plan.*
+*.problem.pddl
