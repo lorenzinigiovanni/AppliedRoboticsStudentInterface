@@ -60,7 +60,7 @@ namespace student
         throw std::logic_error("STUDENT FUNCTION - FIND ROBOT - NOT IMPLEMENTED");
     }
 
-    bool planPath(const Polygon &border, const std::vector<Polygon> &obstacles, const std::vector<Polygon> &gate_list,
+    bool planPath(const Polygon &border, const std::vector<Polygon> &obstacles, const std::vector<Polygon> &gates,
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &path, const std::string &config_folder)
     {
@@ -80,11 +80,11 @@ namespace student
         }
 
         // print gate list
-        for (int i = 0; i < gate_list.size(); i++)
+        for (int i = 0; i < gates.size(); i++)
         {
             for (int j = 0; j < obstacles[i].size(); j++)
             {
-                std::cout << "Gate " << i << ": (" << gate_list[i][j].x << ", " << gate_list[i][j].y << ") points" << std::endl;
+                std::cout << "Gate " << i << ": (" << gates[i][j].x << ", " << gates[i][j].y << ") points" << std::endl;
             }
         }
 
@@ -120,6 +120,7 @@ namespace student
 
         GraphMap graph_map;
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
+        graph_map.add_gates(gates);
         graph_map.show_graph(img);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
