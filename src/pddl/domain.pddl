@@ -1,4 +1,4 @@
-(define (domain pursuer)
+(define (domain pursuer-escaper)
     (:requirements :strips :typing :disjunctive-preconditions :action-costs)
     (:types
         robot location

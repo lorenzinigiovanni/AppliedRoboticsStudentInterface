@@ -16,7 +16,7 @@ int main()
     std::vector<float> x;
     std::vector<float> y;
     std::vector<float> theta;
-    
+
     x.push_back(0.15);
     x.push_back(0.45);
     x.push_back(0.0);
@@ -67,11 +67,17 @@ int main()
     graph_map.add_robots(x, y);
     graph_map.show_graph(img);
 
-    Planner planner("pursuer.problem", graph_map);
-    planner.write_problem();
-    planner.generate_plan();
-    std::vector<Point> path = planner.extract_path_from_plan();
-    planner.show_plan(img);
+    Planner escaper_planner("escaper", graph_map);
+    escaper_planner.write_problem();
+    escaper_planner.generate_plan();
+    std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
+    escaper_planner.show_plan(img);
+
+    Planner pursuer_planner("pursuer", graph_map);
+    pursuer_planner.write_problem();
+    pursuer_planner.generate_plan();
+    std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
+    pursuer_planner.show_plan(img);
 
     cv::imshow("Image", img);
     cv::waitKey(0);

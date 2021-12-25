@@ -227,6 +227,22 @@ public:
         return data;
     }
 
+    std::string get_gate_locations()
+    {
+        // (is-gate l0)
+        std::string data;
+
+        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
+        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+        {
+            if (graph[*v].type == GATE)
+            {
+                data += "(is-gate l" + std::to_string(*v) + ")\n";
+            }
+        }
+        return data;
+    }
+
     std::string get_locations_relations()
     {
         std::string data;

@@ -95,11 +95,17 @@ namespace student
         graph_map.add_robots(x, y);
         graph_map.show_graph(img);
 
-        Planner planner("pursuer.problem", graph_map);
-        planner.write_problem();
-        planner.generate_plan();
-        std::vector<Point> planned_path = planner.extract_path_from_plan();
-        planner.show_plan(img);
+        Planner escaper_planner("escaper", graph_map);
+        escaper_planner.write_problem();
+        escaper_planner.generate_plan();
+        std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
+        escaper_planner.show_plan(img);
+
+        Planner pursuer_planner("pursuer", graph_map);
+        pursuer_planner.write_problem();
+        pursuer_planner.generate_plan();
+        std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
+        pursuer_planner.show_plan(img);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 

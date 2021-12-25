@@ -21,10 +21,10 @@ public:
     void write_problem()
     {
         std::ofstream problem;
-        problem.open("/home/ubuntu/workspace/project/src/pddl/" + problem_name + ".pddl", std::ofstream::out | std::ofstream::trunc);
+        problem.open("/home/ubuntu/workspace/project/src/pddl/" + problem_name + ".problem.pddl", std::ofstream::out | std::ofstream::trunc);
 
-        problem << "(define (problem pursuer-prob)" << std::endl;
-        problem << "(:domain pursuer)" << std::endl;
+        problem << "(define (problem " + problem_name + "-prob)" << std::endl;
+        problem << "(:domain pursuer-escaper)" << std::endl;
 
         // Define objects
         problem << "(:objects" << std::endl;
@@ -36,11 +36,19 @@ public:
         problem << "(:init" << std::endl;
         problem << graph_map.get_robots_locations() << std::endl;
         problem << graph_map.get_locations_relations() << std::endl;
+        problem << graph_map.get_gate_locations() << std::endl;
         problem << ")" << std::endl;
 
         // Declare goal
         problem << "(:goal" << std::endl;
-        problem << "(caught r1 r2)" << std::endl;
+        if (problem_name == "escaper")
+        {
+            problem << "(escaped r2)" << std::endl;
+        }
+        else if (problem_name == "pursuer")
+        {
+            problem << "(caught r1 r2)" << std::endl;
+        }
         problem << ")" << std::endl;
 
         problem << ")" << std::endl;
@@ -49,7 +57,7 @@ public:
 
     void generate_plan()
     {
-        std::string cmd = "cd /home/ubuntu/workspace/project/src/pddl/ \n planutils run lama domain.pddl " + problem_name + ".pddl";
+        std::string cmd = "cd /home/ubuntu/workspace/project/src/pddl/ \n planutils run lama domain.pddl " + problem_name + ".problem.pddl";
         system(cmd.c_str());
 
         std::ifstream solution("/home/ubuntu/workspace/project/src/pddl/sas_plan.1");
@@ -112,6 +120,16 @@ public:
 
     void show_plan(cv::Mat &img)
     {
+        cv::Scalar color;
+        if (problem_name == "escaper")
+        {
+            color = cv::Scalar(0, 90, 170);
+        }
+        else if (problem_name == "pursuer")
+        {
+            color = cv::Scalar(255, 0, 230);
+        }
+
         for (int i = 1; i < path.size(); i++)
         {
             int x1 = int(path[i - 1].x * 500) + 50;
@@ -119,7 +137,7 @@ public:
             int x2 = int(path[i].x * 500) + 50;
             int y2 = img.size().height - int(path[i].y * 500) - 50;
 
-            cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(187, 208, 40), 2);
+            cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), color, 2);
         }
     }
 
