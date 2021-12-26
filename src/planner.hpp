@@ -32,7 +32,7 @@ public:
         problem << "r1 r2 - robot" << std::endl;
         problem << ")" << std::endl;
 
-        // Init robot position, relations between locations
+        // Init robot position, relations between locations and distances
         problem << "(:init" << std::endl;
         problem << graph_map.get_robots_locations() << std::endl;
         problem << graph_map.get_locations_relations() << std::endl;
@@ -51,6 +51,9 @@ public:
         }
         problem << ")" << std::endl;
 
+        // Minimize cost
+        problem << "(:metric minimize(total-cost))"<< std::endl;
+        
         problem << ")" << std::endl;
         problem.close();
     }
