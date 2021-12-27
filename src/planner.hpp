@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -52,7 +53,7 @@ public:
         problem << ")" << std::endl;
 
         // Minimize cost
-        problem << "(:metric minimize(total-cost))"<< std::endl;
+        problem << "(:metric minimize(total-cost))" << std::endl;
         
         problem << ")" << std::endl;
         problem.close();
@@ -60,16 +61,22 @@ public:
 
     void generate_plan()
     {
-        std::string cmd = "cd /home/ubuntu/workspace/project/src/pddl/ \n planutils run lama domain.pddl " + problem_name + ".problem.pddl";
+        std::string cmd = "cd /home/ubuntu/workspace/project/src/pddl/ \n rm -rf sas_plan.*  || true \n planutils run lama domain.pddl " + problem_name + ".problem.pddl";
         system(cmd.c_str());
 
         std::ifstream solution("/home/ubuntu/workspace/project/src/pddl/sas_plan.1");
 
-        for (std::string line; std::getline(solution, line);)
+        if (solution.good())
         {
-            data.push_back(split_string(line, " "));
+            for (std::string line; std::getline(solution, line);)
+            {
+                data.push_back(split_string(line, " "));
+            }
         }
-
+        else
+        {
+            throw std::logic_error("PLAN NOT FOUND - ABORTING");
+        }
         solution.close();
     }
 
