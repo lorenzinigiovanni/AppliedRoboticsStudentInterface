@@ -5,10 +5,10 @@
 class dPoint
 {
 public:
-    float x, y, t;
+    double x, y, t;
 
-    dPoint(float _x, float _y, float _t) : x(_x), y(_y), t(_t){};
-    dPoint(const Point p, float _t) : x(p.x), y(p.y), t(_t){};
+    dPoint(double _x, double _y, double _t) : x(_x), y(_y), t(_t){};
+    dPoint(const Point p, double _t) : x(p.x), y(p.y), t(_t){};
 
     friend std::ostream &operator<<(std::ostream &os, const dPoint &_p);
 };

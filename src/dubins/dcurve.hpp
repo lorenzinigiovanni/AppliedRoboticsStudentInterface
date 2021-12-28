@@ -14,9 +14,9 @@ class dCurve
 {
 public:
     dArc *a1, *a2, *a3;
-    float L;
+    double L;
 
-    dCurve(dPoint *d1, float s1, float s2, float s3, float k1, float k2, float k3)
+    dCurve(dPoint *d1, double s1, double s2, double s3, double k1, double k2, double k3)
     {
         a1 = new dArc(d1, k1, s1);
         a2 = new dArc(a1->f, k2, s2);

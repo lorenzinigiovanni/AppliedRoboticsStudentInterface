@@ -27,17 +27,17 @@ public:
 
     struct StandardForm
     {
-        float sc_th0;
-        float sc_thf;
-        float sc_Kmax;
-        float lambda;
-        StandardForm(float _sc_th0, float _sc_thf, float _sc_Kmax, float _lambda) : sc_th0(_sc_th0), sc_thf(_sc_thf), sc_Kmax(_sc_Kmax), lambda(_lambda) {}
+        double sc_th0;
+        double sc_thf;
+        double sc_Kmax;
+        double lambda;
+        StandardForm(double _sc_th0, double _sc_thf, double _sc_Kmax, double _lambda) : sc_th0(_sc_th0), sc_thf(_sc_thf), sc_Kmax(_sc_Kmax), lambda(_lambda) {}
     };
 
     struct NotStandardForm
     {
-        float s1, s2, s3;
-        NotStandardForm(float _s1, float _s2, float _s3) : s1(_s1), s2(_s2), s3(_s3) {}
+        double s1, s2, s3;
+        NotStandardForm(double _s1, double _s2, double _s3) : s1(_s1), s2(_s2), s3(_s3) {}
     };
 
     struct Ok_Pieces
@@ -49,19 +49,19 @@ public:
 
     static Ok_Pieces (*primitives[6])(StandardForm &sf);
 
-    static Solution solve(dPoint &p1, dPoint &p2, float Kmax)
+    static Solution solve(dPoint &p1, dPoint &p2, double Kmax)
     {
         {
             StandardForm sf = scaleToStandard(p1, p2, Kmax);
 
             int pidx = -1;
-            float L = std::numeric_limits<float>::max(); // infinito
+            double L = std::numeric_limits<double>::max(); // infinito
             StandardForm tmp_sf = StandardForm(0, 0, 0, 0);
 
             for (int i = 0; i <= 5; i++)
             {
                 Ok_Pieces op = (primitives[i])(sf);
-                float Lcur = op.nsf.s1 + op.nsf.s2 + op.nsf.s3;
+                double Lcur = op.nsf.s1 + op.nsf.s2 + op.nsf.s3;
 
                 if (op.check && (Lcur < L))
                 {
@@ -78,9 +78,9 @@ public:
                 tmp_sf.lambda = sf.lambda;
                 NotStandardForm nsf = scaleFromStandard(tmp_sf);
 
-                float k1 = kSigns[pidx][0] * Kmax;
-                float k2 = kSigns[pidx][1] * Kmax;
-                float k3 = kSigns[pidx][2] * Kmax;
+                double k1 = kSigns[pidx][0] * Kmax;
+                double k2 = kSigns[pidx][1] * Kmax;
+                double k3 = kSigns[pidx][2] * Kmax;
                 dCurve curve = dCurve(&p1, nsf.s1, nsf.s2, nsf.s3, k1, k2, k3);
 
                 // assert(DubinsUtils::check(
@@ -103,7 +103,8 @@ public:
                         sf.sc_th0,
                         sf.sc_thf))
                 {
-                    cout << "ERROR, dubins.hpp line 106" << endl;
+                    cout << "ERROR, dubins.hpp line 106, probably a low precision solution" << endl;
+                    return Solution(-1, dCurve(new dPoint(0, 0, 0), 0, 0, 0, 0, 0, 0));
                 }
 
                 return Solution(pidx, curve);
@@ -113,18 +114,18 @@ public:
         }
     }
 
-    static StandardForm scaleToStandard(dPoint &pi, dPoint &pf, float Kmax)
+    static StandardForm scaleToStandard(dPoint &pi, dPoint &pf, double Kmax)
     {
         {
-            float dx = pf.x - pi.x;
-            float dy = pf.y - pi.y;
-            float phi = atan2(dy, dx);
-            float lambda = hypot(dx, dy) / 2;
+            double dx = pf.x - pi.x;
+            double dy = pf.y - pi.y;
+            double phi = atan2(dy, dx);
+            double lambda = hypot(dx, dy) / 2;
 
             // scale and normalize angles and curvature
-            float sc_th0 = DubinsUtils::mod2pi(pi.t - phi);
-            float sc_thf = DubinsUtils::mod2pi(pf.t - phi);
-            float sc_Kmax = Kmax * lambda;
+            double sc_th0 = DubinsUtils::mod2pi(pi.t - phi);
+            double sc_thf = DubinsUtils::mod2pi(pf.t - phi);
+            double sc_Kmax = Kmax * lambda;
 
             return StandardForm(sc_th0, sc_thf, sc_Kmax, lambda);
         }
@@ -133,9 +134,9 @@ public:
     static NotStandardForm scaleFromStandard(StandardForm &sf)
     {
         {
-            float s1 = sf.sc_th0 * sf.lambda;
-            float s2 = sf.sc_thf * sf.lambda;
-            float s3 = sf.sc_Kmax * sf.lambda;
+            double s1 = sf.sc_th0 * sf.lambda;
+            double s2 = sf.sc_thf * sf.lambda;
+            double s3 = sf.sc_Kmax * sf.lambda;
             return NotStandardForm(s1, s2, s3);
         }
     }
@@ -143,17 +144,17 @@ public:
     static Ok_Pieces LSL(StandardForm &sf)
     {
         {
-            float sc_s1;
-            float sc_s2;
-            float sc_s3;
+            double sc_s1;
+            double sc_s2;
+            double sc_s3;
 
-            float invK = 1 / sf.sc_Kmax;
-            float C = cos(sf.sc_thf) - cos(sf.sc_th0);
-            float S = 2 * sf.sc_Kmax + sin(sf.sc_th0) - sin(sf.sc_thf);
-            float temp1 = atan2(C, S);
+            double invK = 1 / sf.sc_Kmax;
+            double C = cos(sf.sc_thf) - cos(sf.sc_th0);
+            double S = 2 * sf.sc_Kmax + sin(sf.sc_th0) - sin(sf.sc_thf);
+            double temp1 = atan2(C, S);
 
             sc_s1 = invK * DubinsUtils::mod2pi(temp1 - sf.sc_th0);
-            float delta = 2 + 4 * pow(sf.sc_Kmax, 2) - 2 * cos(sf.sc_th0 - sf.sc_thf) + 4 * sf.sc_Kmax * (sin(sf.sc_th0) - sin(sf.sc_thf));
+            double delta = 2 + 4 * pow(sf.sc_Kmax, 2) - 2 * cos(sf.sc_th0 - sf.sc_thf) + 4 * sf.sc_Kmax * (sin(sf.sc_th0) - sin(sf.sc_thf));
 
             if (delta < 0)
             {
@@ -169,16 +170,16 @@ public:
 
     static Ok_Pieces RSR(StandardForm &sf)
     {
-        float sc_s1;
-        float sc_s2;
-        float sc_s3;
+        double sc_s1;
+        double sc_s2;
+        double sc_s3;
 
-        float invK = 1 / sf.sc_Kmax;
-        float C = cos(sf.sc_th0) - cos(sf.sc_thf);
-        float S = 2 * sf.sc_Kmax - sin(sf.sc_th0) + sin(sf.sc_thf);
-        float temp1 = atan2(C, S);
+        double invK = 1 / sf.sc_Kmax;
+        double C = cos(sf.sc_th0) - cos(sf.sc_thf);
+        double S = 2 * sf.sc_Kmax - sin(sf.sc_th0) + sin(sf.sc_thf);
+        double temp1 = atan2(C, S);
         sc_s1 = invK * DubinsUtils::mod2pi(sf.sc_th0 - temp1);
-        float delta = 2 + 4 * pow(sf.sc_Kmax, 2) - 2 * cos(sf.sc_th0 - sf.sc_thf) - 4 * sf.sc_Kmax * (sin(sf.sc_th0) - sin(sf.sc_thf));
+        double delta = 2 + 4 * pow(sf.sc_Kmax, 2) - 2 * cos(sf.sc_th0 - sf.sc_thf) - 4 * sf.sc_Kmax * (sin(sf.sc_th0) - sin(sf.sc_thf));
 
         if (delta < 0)
         {
@@ -193,14 +194,14 @@ public:
 
     static Ok_Pieces LSR(StandardForm &sf)
     {
-        float sc_s1;
-        float sc_s2;
-        float sc_s3;
+        double sc_s1;
+        double sc_s2;
+        double sc_s3;
 
-        float invK = 1 / sf.sc_Kmax;
-        float C = cos(sf.sc_th0) + cos(sf.sc_thf);
-        float S = 2 * sf.sc_Kmax + sin(sf.sc_th0) + sin(sf.sc_thf);
-        float delta = -2 + 4 * pow(sf.sc_Kmax, 2) + 2 * cos(sf.sc_th0 - sf.sc_thf) + 4 * sf.sc_Kmax * (sin(sf.sc_th0) + sin(sf.sc_thf));
+        double invK = 1 / sf.sc_Kmax;
+        double C = cos(sf.sc_th0) + cos(sf.sc_thf);
+        double S = 2 * sf.sc_Kmax + sin(sf.sc_th0) + sin(sf.sc_thf);
+        double delta = -2 + 4 * pow(sf.sc_Kmax, 2) + 2 * cos(sf.sc_th0 - sf.sc_thf) + 4 * sf.sc_Kmax * (sin(sf.sc_th0) + sin(sf.sc_thf));
         if (delta < 0)
         {
             return Ok_Pieces(false, NotStandardForm(0, 0, 0));
@@ -215,15 +216,15 @@ public:
 
     static Ok_Pieces RSL(StandardForm &sf)
     {
-        float sc_s1;
-        float sc_s2;
-        float sc_s3;
+        double sc_s1;
+        double sc_s2;
+        double sc_s3;
 
-        float invK = 1 / sf.sc_Kmax;
-        float C = cos(sf.sc_th0) + cos(sf.sc_thf);
-        float S = 2 * sf.sc_Kmax - sin(sf.sc_th0) - sin(sf.sc_thf);
+        double invK = 1 / sf.sc_Kmax;
+        double C = cos(sf.sc_th0) + cos(sf.sc_thf);
+        double S = 2 * sf.sc_Kmax - sin(sf.sc_th0) - sin(sf.sc_thf);
 
-        float delta = -2 + 4 * pow(sf.sc_Kmax, 2) + 2 * cos(sf.sc_th0 - sf.sc_thf) - 4 * sf.sc_Kmax * (sin(sf.sc_th0) + sin(sf.sc_thf));
+        double delta = -2 + 4 * pow(sf.sc_Kmax, 2) + 2 * cos(sf.sc_th0 - sf.sc_thf) - 4 * sf.sc_Kmax * (sin(sf.sc_th0) + sin(sf.sc_thf));
         if (delta < 0)
         {
             return Ok_Pieces(false, NotStandardForm(0, 0, 0));
@@ -238,13 +239,13 @@ public:
 
     static Ok_Pieces RLR(StandardForm &sf)
     {
-        float sc_s1;
-        float sc_s2;
-        float sc_s3;
+        double sc_s1;
+        double sc_s2;
+        double sc_s3;
 
-        float invK = 1 / sf.sc_Kmax;
-        float C = cos(sf.sc_th0) - cos(sf.sc_thf);
-        float S = 2 * sf.sc_Kmax - sin(sf.sc_th0) + sin(sf.sc_thf);
+        double invK = 1 / sf.sc_Kmax;
+        double C = cos(sf.sc_th0) - cos(sf.sc_thf);
+        double S = 2 * sf.sc_Kmax - sin(sf.sc_th0) + sin(sf.sc_thf);
 
         sc_s2 = invK * DubinsUtils::mod2pi(2 * M_PI - acos(0.125 * (6 - 4 * pow(sf.sc_Kmax, 2) + 2 * cos(sf.sc_th0 - sf.sc_thf) + 4 * sf.sc_Kmax * (sin(sf.sc_th0) - sin(sf.sc_thf)))));
         sc_s1 = invK * DubinsUtils::mod2pi(sf.sc_th0 - atan2(C, S) + 0.5 * sf.sc_Kmax * sc_s2);
@@ -255,13 +256,13 @@ public:
 
     static Ok_Pieces LRL(StandardForm &sf)
     {
-        float sc_s1;
-        float sc_s2;
-        float sc_s3;
+        double sc_s1;
+        double sc_s2;
+        double sc_s3;
 
-        float invK = 1 / sf.sc_Kmax;
-        float C = cos(sf.sc_thf) - cos(sf.sc_th0);
-        float S = 2 * sf.sc_Kmax + sin(sf.sc_th0) - sin(sf.sc_thf);
+        double invK = 1 / sf.sc_Kmax;
+        double C = cos(sf.sc_thf) - cos(sf.sc_th0);
+        double S = 2 * sf.sc_Kmax + sin(sf.sc_th0) - sin(sf.sc_thf);
 
         sc_s2 = invK * DubinsUtils::mod2pi(2 * M_PI - acos(0.125 * (6 - 4 * pow(sf.sc_Kmax, 2) + 2 * cos(sf.sc_th0 - sf.sc_thf) - 4 * sf.sc_Kmax * (sin(sf.sc_th0) - sin(sf.sc_thf)))));
         sc_s1 = invK * DubinsUtils::mod2pi(-sf.sc_th0 + atan2(C, S) + 0.5 * sf.sc_Kmax * sc_s2);

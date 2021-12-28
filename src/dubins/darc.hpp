@@ -15,18 +15,18 @@ class dArc
 public:
     dPoint *i;
     dPoint *f;
-    float k, L;
+    double k, L;
 
-    dArc(dPoint *_i, float _k, float _L) : i(_i), k(_k), L(_L)
+    dArc(dPoint *_i, double _k, double _L) : i(_i), k(_k), L(_L)
     {
         f = circLine(_L, _i, _k);
     }
 
-    dPoint *circLine(float s, dPoint *p, float k)
+    dPoint *circLine(double s, dPoint *p, double k)
     {
-        float x = p->x + s * DubinsUtils::sinc(k * s / 2.0) * cos(p->t + k * s / 2);
-        float y = p->y + s * DubinsUtils::sinc(k * s / 2.0) * sin(p->t + k * s / 2);
-        float theta = DubinsUtils::mod2pi(p->t + k * s);
+        double x = p->x + s * DubinsUtils::sinc(k * s / 2.0) * cos(p->t + k * s / 2);
+        double y = p->y + s * DubinsUtils::sinc(k * s / 2.0) * sin(p->t + k * s / 2);
+        double theta = DubinsUtils::mod2pi(p->t + k * s);
         return new dPoint(x, y, theta);
     }
 
@@ -37,7 +37,7 @@ public:
 
         for (int index = 0; index < n_points; index++)
         {
-            float s = L / n_points * index;
+            double s = L / n_points * index;
             dPoint *d3 = circLine(s, i, k);
             contours.push_back(cv::Point(int(d3->x * 500 + 50), img.size().height - int(d3->y * 500 + 50)));
         }
@@ -77,15 +77,15 @@ public:
     std::vector<Pose> to_pose_vect()
     {
         std::vector<Pose> pose_vect;
-        float delta = L / 10.0;
+        double delta = L / 10.0;
 
         pose_vect.push_back(Pose(delta, i->x, i->y, i->t, k));
         
         dPoint *pi = i;
-        for (float l = 0.0; l < L; l += delta)
+        for (double l = 0.0; l < L; l += delta)
         {
-            pi = circLine(l, pi, k);
-            pose_vect.push_back(Pose(l, pi->x, pi->y, pi->t, k)); // Pose(s, x, y, t, k) s = pathlength, k = curvature
+            pi = circLine(delta, pi, k);
+            pose_vect.push_back(Pose(delta, pi->x, pi->y, pi->t, k)); // Pose(s, x, y, t, k) s = pathlength, k = curvature
         }
 
         return pose_vect;
