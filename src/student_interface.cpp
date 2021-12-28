@@ -6,6 +6,7 @@
 #include "planner.hpp"
 #include "dubins/dpoint.hpp"
 #include "dubins/dubins.hpp"
+#include "router.hpp"
 
 #include <stdexcept>
 #include <sstream>
@@ -69,10 +70,6 @@ namespace student
     {
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-        unsigned int size_x = 1000;
-        unsigned int size_y = 800;
-        cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
-
         // offsetting
         std::vector<Polygon> borders;
         borders.push_back(border);
@@ -88,165 +85,68 @@ namespace student
         cell_decomposition.add_polygons(offsetted_borders);
         cell_decomposition.add_polygons(intersected_obstacles_borders);
         cell_decomposition.create_cdt();
-        // cell_decomposition.print_triangles();
-        // cell_decomposition.show_triangles(img);
 
+        // graph map
         GraphMap graph_map;
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
         graph_map.add_gates(gates);
         graph_map.add_robots(x, y);
-        // graph_map.show_graph(img);
 
+        // planner for escaper
         Planner escaper_planner("escaper", graph_map);
         escaper_planner.write_problem();
         escaper_planner.generate_plan();
         std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
-        // escaper_planner.show_plan(img);
 
+        // planner for pursuer
         Planner pursuer_planner("pursuer", graph_map);
         pursuer_planner.write_problem();
         pursuer_planner.generate_plan();
         std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
-        // pursuer_planner.show_plan(img);
 
-        // ESCAPER
+        // router for pursuer
+        Router pursuer_router;
+        pursuer_router.add_path(pursuer_path, theta[0]);
+        pursuer_router.elaborate_solution();
+        std::vector<Pose> pursuer_solution = pursuer_router.get_path();
+        paths[0].points = pursuer_solution;
 
-        {
-            std::vector<dPoint> escaper_dpoints;
+        // route for escaper
+        Router escaper_router;
+        escaper_router.add_path(escaper_path, theta[1]);
+        escaper_router.elaborate_solution();
+        std::vector<Pose> escaper_solution = escaper_router.get_path();
+        paths[1].points = escaper_solution;
 
-            for (int i = 0; i < escaper_path.size(); i++)
-            {
-                float theta0 = 0.0;
-                float theta1 = 0.0;
-
-                if (i == 0)
-                {
-                    escaper_dpoints.push_back(dPoint(escaper_path[i], theta[1])); // suppose theta escaper = theta[1]
-                }
-                else if (i == escaper_path.size() - 1)
-                {
-                    float dx = escaper_path[i].x - escaper_path[i - 1].x;
-                    float dy = escaper_path[i].y - escaper_path[i - 1].y;
-                    theta0 = std::atan2(dy, dx);
-                    escaper_dpoints.push_back(dPoint(escaper_path[i], theta0));
-                }
-                else
-                {
-                    float dx1 = escaper_path[i].x - escaper_path[i - 1].x;
-                    float dy1 = escaper_path[i].y - escaper_path[i - 1].y;
-                    theta0 = std::atan2(dy1, dx1);
-
-                    float dx2 = escaper_path[i + 1].x - escaper_path[i].x;
-                    float dy2 = escaper_path[i + 1].y - escaper_path[i].y;
-                    theta1 = std::atan2(dy2, dx2);
-
-                    float theta_tot = (theta0 + theta1) / 2;
-
-                    escaper_dpoints.push_back(dPoint(escaper_path[i], theta_tot));
-                }
-            }
-
-            std::vector<Dubins::Solution> escaper_solutions;
-            std::vector<Pose> tmp_path;
-
-            for (int i = 0; i < escaper_dpoints.size() - 1; i++)
-            {
-                escaper_solutions.push_back(Dubins::solve(escaper_dpoints[i], escaper_dpoints[i + 1], 40)); // dPoint, dPoint, max curvature
-
-                if (escaper_solutions[i].pidx >= 0)
-                {
-                    std::vector<Pose> escaper_paths_from_dCurve;
-
-                    // escaper_solutions[i].c.show_dcurve(img, 1);
-                    escaper_paths_from_dCurve = escaper_solutions[i].c.to_pose_vect();
-
-                    tmp_path.insert(tmp_path.end(), std::make_move_iterator(escaper_paths_from_dCurve.begin()), std::make_move_iterator(escaper_paths_from_dCurve.end()));
-                }
-                else
-                {
-                    cout << "Failed to find a solution\n";
-                }
-            }
-
-            paths[1].points.clear();
-
-            for (int i = 0; i < tmp_path.size(); i++)
-            {
-                paths[1].points.emplace_back(tmp_path[i]); // paths[1] = escaper path
-            }
-        }
-
-        // PURSUER
-
-        {
-            std::vector<dPoint> pursuer_dpoints;
-
-            for (int i = 0; i < pursuer_path.size(); i++)
-            {
-                float theta0 = 0.0;
-                float theta1 = 0.0;
-
-                if (i == 0)
-                {
-                    pursuer_dpoints.push_back(dPoint(pursuer_path[i], theta[0])); // supponiamo theta pursuer theta[0]
-                }
-                else if (i == pursuer_path.size() - 1)
-                {
-                    float dx = pursuer_path[i].x - pursuer_path[i - 1].x;
-                    float dy = pursuer_path[i].y - pursuer_path[i - 1].y;
-                    theta0 = std::atan2(dy, dx);
-                    pursuer_dpoints.push_back(dPoint(pursuer_path[i], theta0));
-                }
-                else
-                {
-                    float dx1 = pursuer_path[i].x - pursuer_path[i - 1].x;
-                    float dy1 = pursuer_path[i].y - pursuer_path[i - 1].y;
-                    theta0 = std::atan2(dy1, dx1);
-
-                    float dx2 = pursuer_path[i + 1].x - pursuer_path[i].x;
-                    float dy2 = pursuer_path[i + 1].y - pursuer_path[i].y;
-                    theta1 = std::atan2(dy2, dx2);
-
-                    float theta_tot = (theta0 + theta1) / 2;
-
-                    pursuer_dpoints.push_back(dPoint(pursuer_path[i], theta_tot));
-                }
-            }
-
-            std::vector<Dubins::Solution> pursuer_solutions;
-            std::vector<Pose> tmp_path;
-
-            for (int i = 0; i < pursuer_dpoints.size() - 1; i++)
-            {
-                pursuer_solutions.push_back(Dubins::solve(pursuer_dpoints[i], pursuer_dpoints[i + 1], 40)); // dPoint, dPoint, max curvature
-                if (pursuer_solutions[i].pidx >= 0)
-                {
-                    std::vector<Pose> escaper_paths_from_dCurve;
-
-                    // pursuer_solutions[i].c.show_dcurve(img, 0);
-                    escaper_paths_from_dCurve = pursuer_solutions[i].c.to_pose_vect();
-
-                    tmp_path.insert(tmp_path.end(), std::make_move_iterator(escaper_paths_from_dCurve.begin()), std::make_move_iterator(escaper_paths_from_dCurve.end()));
-                }
-                else
-                {
-                    cout << "Failed to find a solution\n";
-                }
-            }
-
-            paths[0].points.clear();
-
-            for (int i = 0; i < tmp_path.size(); i++)
-            {
-                paths[0].points.emplace_back(tmp_path[i]);
-            }
-        }
+        // for (int i = 0; i < paths[1].points.size(); i++)
+        // {
+        //     std::cout << "escaper: " << paths[1].points[i].s << " " << paths[1].points[i].x << " " << paths[1].points[i].y << " " << paths[1].points[i].theta << " " << paths[1].points[i].kappa << std::endl;
+        // }
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000 << "[ms]" << std::endl;
 
-        // cv::imshow("Image", img);
-        // cv::waitKey(0);
+        bool debug_img = false;
+        if (debug_img)
+        {
+            unsigned int size_x = 1000;
+            unsigned int size_y = 800;
+
+            cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
+
+            cell_decomposition.show_triangles(img);
+
+            graph_map.show_graph(img);
+
+            pursuer_planner.show_plan(img);
+            escaper_planner.show_plan(img);
+
+            pursuer_router.show_path(img, 0);
+            escaper_router.show_path(img, 1);
+
+            cv::imshow("Image", img);
+            cv::waitKey(0);
+        }
 
         return true;
     }

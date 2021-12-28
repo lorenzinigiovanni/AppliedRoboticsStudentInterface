@@ -6,15 +6,12 @@
 #include "planner.hpp"
 #include "dubins/dpoint.hpp"
 #include "dubins/dubins.hpp"
+#include "router.hpp"
 #include <iostream>
 #include <iterator>
 
 int main()
 {
-    unsigned int size_x = 1000;
-    unsigned int size_y = 800;
-    cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
-
     // Robot locations
     std::vector<float> x;
     std::vector<float> y;
@@ -62,96 +59,52 @@ int main()
     cell_decomposition.add_polygons(intersected_paths_borders);
     cell_decomposition.create_cdt();
     // cell_decomposition.print_triangles();
-    cell_decomposition.show_triangles(img);
 
     GraphMap graph_map;
     graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
     graph_map.add_gates(gates);
     graph_map.add_robots(x, y);
-    graph_map.show_graph(img);
 
     Planner escaper_planner("escaper", graph_map);
     escaper_planner.write_problem();
     escaper_planner.generate_plan();
     std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
-    escaper_planner.show_plan(img);
 
     Planner pursuer_planner("pursuer", graph_map);
     pursuer_planner.write_problem();
     pursuer_planner.generate_plan();
     std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
-    pursuer_planner.show_plan(img);
 
-    std::vector<dPoint> dpoints;
+    // std::vector<Path> paths;
+    // paths.resize(3);
 
-    for (int i = 0; i < pursuer_path.size(); i++)
+    Router pursuer_router;
+    pursuer_router.add_path(pursuer_path, theta[0]);
+    pursuer_router.elaborate_solution();
+    std::vector<Pose> pursuer_solution = pursuer_router.get_path();
+    std::cout << "Pursuer solution size: " << pursuer_solution.size() << std::endl;
+
+    bool debug_img = true;
+    if (debug_img)
     {
-        float theta0 = 0.0;
-        float theta1 = 0.0;
+        unsigned int size_x = 1000;
+        unsigned int size_y = 800;
 
-        if (i == 0)
-        {
-            dpoints.push_back(dPoint(pursuer_path[i], theta[0]));
-        }
-        else if (i == pursuer_path.size() - 1)
-        {
-            float dx = pursuer_path[i].x - pursuer_path[i - 1].x;
-            float dy = pursuer_path[i].y - pursuer_path[i - 1].y;
-            theta0 = std::atan2(dy, dx);
-            dpoints.push_back(dPoint(pursuer_path[i], theta0));
-        }
-        else
-        {
-            float dx1 = pursuer_path[i].x - pursuer_path[i - 1].x;
-            float dy1 = pursuer_path[i].y - pursuer_path[i - 1].y;
-            theta0 = std::atan2(dy1, dx1);
+        cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
 
-            float dx2 = pursuer_path[i + 1].x - pursuer_path[i].x;
-            float dy2 = pursuer_path[i + 1].y - pursuer_path[i].y;
-            theta1 = std::atan2(dy2, dx2);
+        cell_decomposition.show_triangles(img);
 
-            float theta_tot_2 = (theta0 + theta1) / 2;
+        graph_map.show_graph(img);
 
-            dpoints.push_back(dPoint(pursuer_path[i], theta_tot_2));
-        }
+        escaper_planner.show_plan(img);
+        pursuer_planner.show_plan(img);
+
+        pursuer_router.show_path(img, 0);
+        // escaper_router.show_path(img, 1);
+
+        cv::imshow("Image", img);
+        cv::waitKey(0);
     }
-
-    std::vector<Dubins::Solution> solutions;
-    std::vector<Path> path;
-    std::vector<Pose> total_path;
-
-    path.resize(3);
-
-    for (int i = 0; i < dpoints.size() - 1; i++)
-    {
-        solutions.push_back(Dubins::solve(dpoints[i], dpoints[i + 1], 40)); // dPoint, dPoint, max curvature
-        if (solutions[i].pidx >= 0)
-        {
-            std::vector<Pose> escaper_paths_from_dCurve;
-            cout << "Success to find a solution\n";
-
-            cout << "a1: " << *(solutions[i].c.a1) << endl;
-            cout << "a2: " << *(solutions[i].c.a2) << endl;
-            cout << "a3: " << *(solutions[i].c.a3) << endl;
-            cout << "L: " << solutions[i].c.L << endl;
-
-            solutions[i].c.show_dcurve(img, 0);
-            escaper_paths_from_dCurve = solutions[i].c.to_pose_vect();
-            total_path.insert(total_path.end(), std::make_move_iterator(escaper_paths_from_dCurve.begin()), std::make_move_iterator(escaper_paths_from_dCurve.end()));
-        }
-        else
-        {
-            cout << "Failed to find a solution\n";
-        }
-    }
-
-    for (int i = 0; i < total_path.size(); i++)
-    {
-        path[0].points.emplace_back(total_path[i]);
-    }
-
-    cv::imshow("Image", img);
-    cv::waitKey(0);
 
     return 0;
 }
