@@ -68,7 +68,7 @@ public:
 
         for (int i = 1; i < n_points; i++)
         {
-            cv::line(img, contours[i], contours[i - 1], color, 4);
+            cv::line(img, contours[i], contours[i - 1], color, 2);
         }
     }
 

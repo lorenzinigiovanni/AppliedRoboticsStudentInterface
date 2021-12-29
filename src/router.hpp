@@ -12,59 +12,87 @@ private:
     std::vector<Dubins::Solution> solutions;
     std::vector<dPoint> dpoints;
 
+    double k_max = 25;
+    double n_angle_steps = 36.0;
+
 public:
-    // Point to dPoint
     void add_path(std::vector<Point> &path, float theta_start)
     {
+        /*
+        Compute multi point dubins path using Dynamic Programming
+        */
+
+        int path_lenght = path.size();
+
+        double angle = 2 * M_PI;
+        double angle_step = angle / n_angle_steps;
+
+        std::vector<std::vector<double>> lenghts_m(path_lenght, std::vector<double>(n_angle_steps, 10000.0)); // matrix path_lenght x n_angle_steps
+        std::vector<std::vector<int>> angles_m(path_lenght, std::vector<int>(n_angle_steps, 0));              // matrix path_lenght x n_angle_steps
+
+        for (int n = path_lenght - 2; n >= 0; n--)
+        {
+            for (int i = 0; i < n_angle_steps; i++)
+            {
+                for (int j = 0; j < n_angle_steps; j++)
+                {
+                    dPoint point_1(path[n], angle_step * i);
+                    dPoint point_2(path[n + 1], angle_step * j);
+
+                    Dubins::Solution solution = Dubins::solve(point_1, point_2, k_max);
+                    double l1 = solution.c.L;
+
+                    double l2 = 0.0;
+                    if (n != path_lenght - 2)
+                    {
+                        l2 = lenghts_m[n + 1][j];
+                    }
+
+                    if (lenghts_m[n][i] > l1 + l2)
+                    {
+                        lenghts_m[n][i] = l1 + l2;
+                        angles_m[n + 1][i] = j;
+                    }
+                }
+            }
+        }
+
+        int prev_angle = (int)(theta_start / angle_step);
+
         for (int i = 0; i < path.size(); i++)
         {
-            float theta0 = 0.0;
-            float theta1 = 0.0;
-
             if (i == 0)
             {
-                dpoints.push_back(dPoint(path[i], theta_start)); // suppose theta escaper = theta[1]
-            }
-            else if (i == path.size() - 1)
-            {
-                float dx = path[i].x - path[i - 1].x;
-                float dy = path[i].y - path[i - 1].y;
-                theta0 = std::atan2(dy, dx);
-                dpoints.push_back(dPoint(path[i], theta0));
+                dpoints.push_back(dPoint(path[i], prev_angle * angle_step));
             }
             else
             {
-                float dx1 = path[i].x - path[i - 1].x;
-                float dy1 = path[i].y - path[i - 1].y;
-                theta0 = std::atan2(dy1, dx1);
-
-                float dx2 = path[i + 1].x - path[i].x;
-                float dy2 = path[i + 1].y - path[i].y;
-                theta1 = std::atan2(dy2, dx2);
-
-                float theta_tot = (theta0 + theta1) / 2;
-
-                dpoints.push_back(dPoint(path[i], theta_tot));
+                int curr_angle = angles_m[i][prev_angle];
+                dpoints.push_back(dPoint(path[i], curr_angle * angle_step));
+                prev_angle = curr_angle;
             }
         }
     }
 
     void elaborate_solution()
     {
+        double total_length = 0.0;
         std::vector<Pose> tmp_path;
         for (int i = 0; i < dpoints.size() - 1; i++)
         {
-            Dubins::Solution solution = Dubins::solve(dpoints[i], dpoints[i + 1], 25); // dPoint, dPoint, max curvature
+            Dubins::Solution solution = Dubins::solve(dpoints[i], dpoints[i + 1], k_max);
 
             if (solution.pidx >= 0)
             {
                 solutions.push_back(solution);
+                total_length += solution.c.L;
             }
             else
             {
-                cout << "Failed to find a solution\n";
+                std::cout << "Failed to find a solution" << std::endl;
             }
         }
+        std::cout << "Lenght: " << total_length << std::endl;
     }
 
     std::vector<Pose> get_path()
@@ -76,13 +104,12 @@ public:
             std::vector<Pose> paths_from_dCurve = solutions[i].c.to_pose_vect();
             path.insert(path.end(), std::make_move_iterator(paths_from_dCurve.begin()), std::make_move_iterator(paths_from_dCurve.end()));
         }
-
         return path;
     }
 
     void show_path(cv::Mat &img, unsigned int index)
     {
-        for (int i = 0; i < solutions.size() - 1; i++)
+        for (int i = 0; i < solutions.size(); i++)
         {
             solutions[i].c.show_dcurve(img, index);
         }
