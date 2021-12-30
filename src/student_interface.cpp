@@ -91,6 +91,7 @@ namespace student
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
         graph_map.add_gates(gates);
         graph_map.add_robots(x, y);
+        graph_map.optimize();
 
         // planner for escaper
         Planner escaper_planner("escaper", graph_map);

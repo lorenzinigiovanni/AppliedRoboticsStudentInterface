@@ -151,6 +151,27 @@ public:
         }
     }
 
+    void optimize()
+    {
+        boost::graph_traits<GraphType>::vertex_iterator v1, v1_end;
+        for (boost::tie(v1, v1_end) = boost::vertices(graph); v1 != v1_end; ++v1)
+        {
+            boost::graph_traits<GraphType>::vertex_iterator v2, v2_end;
+            for (boost::tie(v2, v2_end) = boost::vertices(graph); v2 != v2_end; ++v2)
+            {
+                if (*v1 != *v2)
+                {
+                    float distance = distance_btw_points(*v1, *v2);
+
+                    if (distance < 0.1)
+                    {
+                        std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(*v1, *v2, {distance}, graph);
+                    }
+                }
+            }
+        }
+    }
+
     void show_graph(cv::Mat &img)
     {
         boost::graph_traits<GraphType>::edge_iterator e, e_end;
