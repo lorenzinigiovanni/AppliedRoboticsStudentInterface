@@ -220,10 +220,13 @@ public:
 
         for (int i = 0; i < graph.m_vertices.size(); i++)
         {
+            if (graph[i].type != GATE)
+            {
             data += "l" + std::to_string(i) + " ";
         }
+        }
 
-        data += "- location";
+        data += "- waypoint";
 
         return data;
     }
@@ -250,17 +253,18 @@ public:
 
     std::string get_gate_locations()
     {
-        // (is-gate l0)
         std::string data;
 
-        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
-        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+        for (int i = 0; i < graph.m_vertices.size(); i++)
         {
-            if (graph[*v].type == GATE)
+            if (graph[i].type == GATE)
             {
-                data += "(is-gate l" + std::to_string(*v) + ")\n";
+                data += "l" + std::to_string(i) + " ";
             }
         }
+
+        data += "- gate";
+
         return data;
     }
 

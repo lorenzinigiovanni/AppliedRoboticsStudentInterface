@@ -1,14 +1,16 @@
-
 ; problem to debug pddl
 (define (problem pursuer-prob)
-    (:domain pursuer)
+    (:domain pursuer-escaper)
     (:objects
-        l0 l1 l2 l3 l4 l5 - location
-        r1 r2 - robot
+        l0 l1 l2 l3 l4 - waypoint
+        l5 - gate
     )
     (:init
         (at r1 l0)
         (at r2 l3)
+
+        ;(excaping)
+        (pursuing)
 
         (= (total-cost) 0)
 
@@ -32,13 +34,11 @@
 	    (= (distance l3 l5) 60)
         (= (distance l5 l3) 60)
 
-        (is-gate l5)
     )
     (:goal
-        (or
-            (escaped r2)
-            ;(caught r1 r2)
+        ;(escaped r2)
+        (caught r1 r2)
         )
+    (:metric minimize(total-cost)
     )
-    (:metric minimize(total-cost))
 )

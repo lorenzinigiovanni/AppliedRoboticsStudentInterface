@@ -30,14 +30,22 @@ public:
         // Define objects
         problem << "(:objects" << std::endl;
         problem << graph_map.get_locations() << std::endl;
-        problem << "r1 r2 - robot" << std::endl;
+        problem << graph_map.get_gate_locations() << std::endl;
         problem << ")" << std::endl;
 
         // Init robot position, relations between locations and distances
         problem << "(:init" << std::endl;
         problem << graph_map.get_robots_locations() << std::endl;
         problem << graph_map.get_locations_relations() << std::endl;
-        problem << graph_map.get_gate_locations() << std::endl;
+        
+        if (problem_name == "escaper")
+        {
+            problem << "(escaping)" << std::endl;
+        }
+        else if (problem_name == "pursuer")
+        {
+            problem << "(pursuing)" << std::endl;
+        }
         problem << ")" << std::endl;
 
         // Declare goal
@@ -98,23 +106,6 @@ public:
                 path.push_back(graph_map.point_from_index(finish));
 
                 std::cout << "move (" << robot << " " << start << " " << finish << ")" << std::endl;
-            }
-            // (reach-gatess r2 l5)
-            else if (data[i][0] == "(reach-gatess")
-            {
-                size_t robot = std::stoi(data[i][1].substr(1));
-                size_t location = std::stoi(data[i][2].substr(1).substr(0, data[i][2].find(")") - 1));
-
-                std::cout << "reach-gatess (" << robot << " " << location << ")" << std::endl;
-            }
-            // (reach-evader r1 r2 l0)
-            else if (data[i][0] == "(reach-evader")
-            {
-                size_t pursuer = std::stoi(data[i][1].substr(1));
-                size_t evader = std::stoi(data[i][2].substr(1));
-                size_t location = std::stoi(data[i][3].substr(1).substr(0, data[i][3].find(")") - 1));
-
-                std::cout << "reach-evader (" << pursuer << " " << evader << " " << location << ")" << std::endl;
             }
             // ; cost = 2 (unit cost)
             else if (data[i][1] == "cost")

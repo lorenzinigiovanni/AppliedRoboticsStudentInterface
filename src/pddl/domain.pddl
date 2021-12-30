@@ -1,14 +1,20 @@
 (define (domain pursuer-escaper)
-    (:requirements :strips :typing :disjunctive-preconditions :action-costs)
+    (:requirements :adl :derived-predicates :action-costs)
     (:types
-        robot location
+        escaper pursuer - robot
+        gate waypoint - location
+    )
+    (:constants
+        r1 - pursuer
+        r2 - escaper
     )
     (:predicates
         (at ?r - robot ?l - location)
         (near ?l1 ?l2 - location)
-        (is-gate ?l - location)
-        (escaped ?r - robot)
-        (caught ?r1 ?r2 - robot)
+        (escaped ?e - escaper)
+        (caught ?p - pursuer ?e - escaper)
+        (pursuing)
+        (escaping)
     )
     (:functions
         (total-cost)
@@ -17,6 +23,16 @@
     (:action move
         :parameters (?r - robot ?from ?to - location)
         :precondition (and
+            (or
+                (and
+                    (= ?r r1)
+                    (pursuing)
+                )
+                (and
+                    (= ?r r2)
+                    (escaping)
+                )
+            )
             (or
                 (near ?from ?to)
                 (near ?to ?from)
@@ -30,25 +46,25 @@
             (increase (total-cost) (distance ?to ?from))
         )
     )
-    (:action reach-gatess
-        :parameters (?r - robot ?l - location)
-        :precondition (and
-            (is-gate ?l)
-            (at ?r ?l)
+    (:derived
+        (escaped ?e - escaper)
+        (and
+            (exists
+                (?g - gate)
+                (at ?e ?g)
         )
-        :effect (and
-            (escaped ?r)
         )
     )
-    (:action reach-evader
-        :parameters (?r1 ?r2 - robot ?l - location)
-        :precondition (and
-            (at ?r1 ?l)
-            (at ?r2 ?l)
+    (:derived
+        (caught ?p - pursuer ?e - escaper)
+        (and
+            (exists
+                (?l - location)
+                (and
+                    (at ?p ?l)
+                    (at ?e ?l)
         )
-        :effect (and
-            (caught ?r1 ?r2)
-            (not (escaped ?r2))
+            )
         )
     )
 )
