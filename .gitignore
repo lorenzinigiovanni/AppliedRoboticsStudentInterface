@@ -38,3 +38,4 @@ boost/
 # Planner
 sas_plan.*
 *.problem.pddl
+ff

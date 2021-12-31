@@ -222,8 +222,8 @@ public:
         {
             if (graph[i].type != GATE)
             {
-            data += "l" + std::to_string(i) + " ";
-        }
+                data += "l" + std::to_string(i) + " ";
+            }
         }
 
         data += "- waypoint";
@@ -284,9 +284,38 @@ public:
         return data;
     }
 
+    std::string get_missing_escaper_cost_locations(std::vector<int> escaper_index_path)
+    {
+        std::string data;
+
+        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
+        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+        {
+            bool inserted = false;
+            for (int i = 0; i < escaper_index_path.size(); i++)
+            {
+                if (*v == escaper_index_path[i])
+                {
+                    inserted = true;
+                }
+            }
+            if (inserted != true)
+            {
+                data += "(= (escaper-cost l" + std::to_string(*v) + ") -1)\n";
+            }
+        }
+
+        return data;
+    }
+
     Point point_from_index(int i)
     {
         return graph[i].point;
+    }
+
+    float distance_btw_points(GraphType::vertex_descriptor v1, GraphType::vertex_descriptor v2)
+    {
+        return sqrt(pow(graph[v2].point.x - graph[v1].point.x, 2) + pow(graph[v2].point.y - graph[v1].point.y, 2));
     }
 
 private:
@@ -312,11 +341,6 @@ private:
         p.x = (p1.x + p2.x + p3.x + p4.x) / 4;
         p.y = (p1.y + p2.y + p3.y + p4.y) / 4;
         return p;
-    }
-
-    float distance_btw_points(GraphType::vertex_descriptor v1, GraphType::vertex_descriptor v2)
-    {
-        return sqrt(pow(graph[v2].point.x - graph[v1].point.x, 2) + pow(graph[v2].point.y - graph[v1].point.y, 2));
     }
 
     GraphType::vertex_descriptor add_line_between_triangles(size_t t1, size_t t2, std::vector<CDT::Triangle> &triangles, std::vector<Point> &points)

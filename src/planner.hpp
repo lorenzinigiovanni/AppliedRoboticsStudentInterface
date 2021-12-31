@@ -3,6 +3,10 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <array>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -19,7 +23,7 @@ class Planner
 public:
     Planner(std::string _problem_name, GraphMap &_graph_map) : problem_name(_problem_name), graph_map(_graph_map) {}
 
-    void write_problem()
+    void write_problem(std::vector<int> escaper_index_path = std::vector<int>())
     {
         std::ofstream problem;
         problem.open("/home/ubuntu/workspace/project/src/pddl/" + problem_name + ".problem.pddl", std::ofstream::out | std::ofstream::trunc);
@@ -37,7 +41,8 @@ public:
         problem << "(:init" << std::endl;
         problem << graph_map.get_robots_locations() << std::endl;
         problem << graph_map.get_locations_relations() << std::endl;
-        
+        problem << "(= (total-cost) 0)" << std::endl;
+
         if (problem_name == "escaper")
         {
             problem << "(escaping)" << std::endl;
@@ -45,7 +50,18 @@ public:
         else if (problem_name == "pursuer")
         {
             problem << "(pursuing)" << std::endl;
+            problem << std::endl;
+
+            int escaper_distance = 0;
+            for (int i = 0; i < escaper_index_path.size(); i++)
+            {
+                escaper_distance += (int)(100 * graph_map.distance_btw_points(escaper_index_path[i], escaper_index_path[i - 1]));
+                problem << "(= (escaper-cost l" << escaper_index_path[i] << ") " << escaper_distance << ")" << std::endl;
+            }
+
+            problem << graph_map.get_missing_escaper_cost_locations(escaper_index_path);
         }
+
         problem << ")" << std::endl;
 
         // Declare goal
@@ -56,67 +72,104 @@ public:
         }
         else if (problem_name == "pursuer")
         {
-            problem << "(caught r1 r2)" << std::endl;
+            problem << "(caught r1)" << std::endl;
         }
         problem << ")" << std::endl;
 
         // Minimize cost
         problem << "(:metric minimize(total-cost))" << std::endl;
-        
+
         problem << ")" << std::endl;
         problem.close();
     }
 
-    void generate_plan()
+    bool generate_plan()
     {
-        std::string cmd = "cd /home/ubuntu/workspace/project/src/pddl/ \n rm -rf sas_plan.*  || true \n planutils run lama domain.pddl " + problem_name + ".problem.pddl";
-        system(cmd.c_str());
+        std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 3 -w 0";
+        std::string solution = exec(command.c_str());
 
-        std::ifstream solution("/home/ubuntu/workspace/project/src/pddl/sas_plan.1");
+        std::cout << solution << std::endl;
 
-        if (solution.good())
+        std::vector<std::string> lines = split_string(solution, "\n");
+
+        for (auto &line : lines)
         {
-            for (std::string line; std::getline(solution, line);)
+            std::vector<std::string> words = split_string(line, " ");
+            std::vector<std::string> nice_words;
+            for (auto &word : words)
             {
-                data.push_back(split_string(line, " "));
+                if (word != "")
+                {
+                    nice_words.push_back(word);
+                }
             }
+            data.push_back(nice_words);
         }
-        else
-        {
-            throw std::logic_error("PLAN NOT FOUND - ABORTING");
-        }
-        solution.close();
+
+        return true;
     }
 
     std::vector<Point> extract_path_from_plan()
     {
-        for (int i = 0; i < data.size(); i++)
+        std::vector<int> path_indexes = extract_path_indexes_from_plan();
+
+        for (int i = 0; i < path_indexes.size(); i++)
         {
-            // (move r2 l4 l5)
-            if (data[i][0] == "(move")
-            {
-                size_t robot = std::stoi(data[i][1].substr(1));
-                size_t start = std::stoi(data[i][2].substr(1));
-                size_t finish = std::stoi(data[i][3].substr(1).substr(0, data[i][3].find(")") - 1));
-
-                if (path.size() == 0)
-                {
-                    path.push_back(graph_map.point_from_index(start));
-                }
-                path.push_back(graph_map.point_from_index(finish));
-
-                std::cout << "move (" << robot << " " << start << " " << finish << ")" << std::endl;
-            }
-            // ; cost = 2 (unit cost)
-            else if (data[i][1] == "cost")
-            {
-                size_t cost = std::stoi(data[i][3]);
-
-                std::cout << "cost (" << cost << ")" << std::endl;
-            }
+            path.push_back(graph_map.point_from_index(path_indexes[i]));
         }
 
         return path;
+    }
+
+    std::vector<int> extract_path_indexes_from_plan()
+    {
+        /*
+        ff: found legal plan as follows
+        step    0: MOVE R2 L3 L2
+                1: MOVE R2 L2 L5
+                2: MOVE R2 L5 L4
+                3: MOVE R2 L4 L0
+        */
+
+        std::vector<int> path_indexes;
+
+        for (int i = 0; i < data.size(); i++)
+        {
+            if (data[i].size() > 1)
+            {
+                // step    0: MOVE R2 L3 L2
+                //         1: MOVE R2 L2 L5
+                if (data[i][0] == "step")
+                {
+                    data[i].erase(data[i].begin());
+                }
+
+                if (data[i][1] == "MOVE")
+                {
+                    size_t robot = std::stoi(data[i][2].substr(1));
+                    size_t start = std::stoi(data[i][3].substr(1));
+                    size_t finish = std::stoi(data[i][4].substr(1).substr(0, data[i][4].find(")") - 1));
+
+                    if (path_indexes.size() == 0)
+                    {
+                        path_indexes.push_back(start);
+                    }
+                    path_indexes.push_back(finish);
+
+                    std::cout << "MOVE " << robot << " " << start << " " << finish << std::endl;
+                }
+
+                // plan cost: 22.000000
+                else if (data[i][1] == "cost:")
+                {
+                    size_t cost = std::stoi(data[i][2]);
+
+                    std::cout << "COST " << cost << std::endl;
+                }
+            }
+        }
+
+        return path_indexes;
     }
 
     void show_plan(cv::Mat &img)
@@ -143,6 +196,22 @@ public:
     }
 
 private:
+    std::string exec(const char *cmd)
+    {
+        std::array<char, 128> buffer;
+        std::string result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+        if (!pipe)
+        {
+            throw std::runtime_error("popen() failed!");
+        }
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+        {
+            result += buffer.data();
+        }
+        return result;
+    }
+
     std::vector<std::string> split_string(const std::string &str,
                                           const std::string &delimiter)
     {
