@@ -96,14 +96,20 @@ namespace student
         // planner for escaper
         Planner escaper_planner("escaper", graph_map);
         escaper_planner.write_problem();
-        escaper_planner.generate_plan();
+        bool escaper_plan_found = escaper_planner.generate_plan();
         std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
+        std::vector<int> index_path = escaper_planner.extract_path_indexes_from_plan();
 
         // planner for pursuer
         Planner pursuer_planner("pursuer", graph_map);
-        pursuer_planner.write_problem();
-        pursuer_planner.generate_plan();
+        pursuer_planner.write_problem(index_path);
+        bool pursuer_plan_found = pursuer_planner.generate_plan();
         std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
+
+        if (!escaper_plan_found || !pursuer_plan_found)
+        {
+            return false;
+        }
 
         // router for pursuer
         Router pursuer_router;
@@ -127,7 +133,7 @@ namespace student
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000 << "[ms]" << std::endl;
 
-        bool debug_img = false;
+        bool debug_img = true;
         if (debug_img)
         {
             unsigned int size_x = 1000;
