@@ -11,7 +11,7 @@ class Router
 {
 private:
     std::vector<Dubins::Solution> solutions;
-    std::vector<dPoint> dpoints;
+    std::vector<DubinsPoint> dpoints;
 
     double k_max = 25;
     int n_angle_steps = 32;
@@ -66,8 +66,8 @@ public:
                             angle_2 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1);
                         }
 
-                        dPoint point_1(path[n], angle_1);
-                        dPoint point_2(path[n + 1], angle_2);
+                        DubinsPoint point_1(path[n], angle_1);
+                        DubinsPoint point_2(path[n + 1], angle_2);
 
                         Dubins::Solution solution = Dubins::solve(point_1, point_2, k_max);
                         double l1 = solution.c.L;
@@ -123,7 +123,7 @@ public:
         {
             if (i == 0)
             {
-                dpoints.push_back(dPoint(path[i], theta_start));
+                dpoints.push_back(DubinsPoint(path[i], theta_start));
             }
             else
             {
@@ -139,7 +139,7 @@ public:
                     }
                 }
 
-                dpoints.push_back(dPoint(path[i], angle));
+                dpoints.push_back(DubinsPoint(path[i], angle));
             }
         }
     }

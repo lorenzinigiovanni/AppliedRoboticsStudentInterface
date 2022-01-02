@@ -4,9 +4,19 @@
 
 using namespace std;
 
+/**
+ * @brief Utility functions used in Dubins
+ *
+ */
 class DubinsUtils
 {
 public:
+    /**
+     * @brief Compute the sinc function
+     *
+     * @param t The argument of the sinc function
+     * @return The sinc of t
+     */
     double static sinc(double t)
     {
         double s;
@@ -21,6 +31,12 @@ public:
         return s;
     }
 
+    /**
+     * @brief Keep the angle between 0 and 2 pi
+     *
+     * @param ang The angle to keep between 0 and 2 pi
+     * @return The angle between 0 and 2 pi
+     */
     double static mod2pi(double ang)
     {
         double out = ang;
@@ -35,6 +51,12 @@ public:
         return out;
     }
 
+    /**
+     * @brief Keep the angle between -pi and pi
+     *
+     * @param ang The angle to keep between -pi and pi
+     * @return The angle between -pi and pi
+     */
     double static rangeSymm(double ang)
     {
         double out = ang;
@@ -50,6 +72,20 @@ public:
         return out;
     }
 
+    /**
+     * @brief Check the validity of a Dubins curve
+     * 
+     * @param s1 Lenght of the first arc
+     * @param k0 Curvature of the first arc
+     * @param s2 Lenght of the second arc
+     * @param k1 Curvature of the second arc
+     * @param s3 Lenght of the third arc
+     * @param k2 Curvature of the third arc
+     * @param th0 Starting angle
+     * @param thf Final angle
+     * @return true if the curve is valid
+     * @return false if the curve is not valid
+     */
     bool static check(double s1, double k0, double s2, double k1, double s3, double k2, double th0, double thf)
     {
         double x0 = -1;

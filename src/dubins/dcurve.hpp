@@ -10,42 +10,76 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-class dCurve
+/**
+ * @brief Dubins Curve
+ *
+ */
+class DubinsCurve
 {
 public:
-    dArc *a1, *a2, *a3;
-    double L;
+    DubinsArc *a1, *a2, *a3; // three arc of a curve
+    double L;                // lenght of the curve
 
-    dCurve(dPoint *d1, double s1, double s2, double s3, double k1, double k2, double k3)
+    /**
+     * @brief Construct a new Dubins Curve object
+     *
+     * @param d1 Starting point
+     * @param s1 Lenght of the first arc
+     * @param s2 Lenght of the second arc
+     * @param s3 Lenght of the third arc
+     * @param k1 Curvature of the first arc
+     * @param k2 Curvature of the second arc
+     * @param k3 Curvature of the third arc
+     */
+    DubinsCurve(DubinsPoint *d1, double s1, double s2, double s3, double k1, double k2, double k3)
     {
-        a1 = new dArc(d1, k1, s1);
-        a2 = new dArc(a1->f, k2, s2);
-        a3 = new dArc(a2->f, k3, s3);
+        // a Dubins Curve is composed of three Dubins Arc
+        a1 = new DubinsArc(d1, k1, s1);
+        a2 = new DubinsArc(a1->f, k2, s2);
+        a3 = new DubinsArc(a2->f, k3, s3);
+
+        // the lenght of the curve is the sum of the lenght of the three arcs
         L = a1->L + a2->L + a3->L;
     }
 
-    void show_dcurve(cv::Mat &img, int _index)
+    /**
+     * @brief Print the Dubins Curve on the image
+     *
+     * @param img The image to add the Dubins Arc to
+     * @param color_index The index of the robot or the index of the Dubins Arc in the Dubins Curve
+     */
+    void show_dcurve(cv::Mat &img, int color_index)
     {
+        // color start green, middle blue, end red
         // a1->show_darc(img, 0);
         // a2->show_darc(img, 1);
         // a3->show_darc(img, 2);
 
-        a1->show_darc(img, _index);
-        a2->show_darc(img, _index);
-        a3->show_darc(img, _index);
+        // color depends on robot
+        a1->show_darc(img, color_index);
+        a2->show_darc(img, color_index);
+        a3->show_darc(img, color_index);
     }
 
+    /**
+     * @brief Convert the Dubins Curve to a vector of Pose
+     *
+     * @return A vector of Pose
+     */
     std::vector<Pose> to_pose_vect()
     {
-        std::vector<Pose> path;
-        std::vector<Pose> arc;
+        std::vector<Pose> path; // path composed of the three arcs
+        std::vector<Pose> arc;  // one arc
 
+        // convert arc1 to pose vector and add to path
         arc = a1->to_pose_vect();
         path.insert(path.end(), std::make_move_iterator(arc.begin()), std::make_move_iterator(arc.end()));
 
+        // convert arc2 to pose vector and add to path
         arc = a2->to_pose_vect();
         path.insert(path.end(), std::make_move_iterator(arc.begin()), std::make_move_iterator(arc.end()));
 
+        // convert arc3 to pose vector and add to path
         arc = a3->to_pose_vect();
         path.insert(path.end(), std::make_move_iterator(arc.begin()), std::make_move_iterator(arc.end()));
 

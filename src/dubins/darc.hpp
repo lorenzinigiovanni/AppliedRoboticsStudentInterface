@@ -10,78 +10,113 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-class dArc
+/**
+ * @brief Arc of a Dubins curve
+ *
+ */
+class DubinsArc
 {
 public:
-    dPoint *i;
-    dPoint *f;
-    double k, L;
+    DubinsPoint *i; // starting point
+    DubinsPoint *f; // ending point
+    double k;  // curvature
+    double L;  // lenght
 
-    dArc(dPoint *_i, double _k, double _L) : i(_i), k(_k), L(_L)
+    /**
+     * @brief Construct a new Dubins Arc object
+     *
+     * @param _i The starting point
+     * @param _k The curvature
+     * @param _L The lenght
+     */
+    DubinsArc(DubinsPoint *_i, double _k, double _L) : i(_i), k(_k), L(_L)
     {
+        // compute ending point given starting point, curvature and lenght
         f = circLine(_L, _i, _k);
     }
 
-    dPoint *circLine(double s, dPoint *p, double k)
+    /**
+     * @brief Compute the point on the circle given the starting point, curvature and lenght
+     *
+     * @param s The lenght of the arc
+     * @param p The starting point
+     * @param k The curvature
+     * @return The ending point of the arc
+     */
+    DubinsPoint *circLine(double s, DubinsPoint *p, double k)
     {
         double x = p->x + s * DubinsUtils::sinc(k * s / 2.0) * cos(p->t + k * s / 2);
         double y = p->y + s * DubinsUtils::sinc(k * s / 2.0) * sin(p->t + k * s / 2);
         double theta = DubinsUtils::mod2pi(p->t + k * s);
-        return new dPoint(x, y, theta);
+        return new DubinsPoint(x, y, theta);
     }
 
+    /**
+     * @brief Print the Dubins Arc on the image
+     *
+     * @param img The image to add the Dubins Arc to
+     * @param color_index The index of the robot or the index of the Dubins Arc in the Dubins Curve
+     */
     void show_darc(cv::Mat &img, int color_index)
     {
+        // samples the arc with n_points
         int n_points = 1000;
         std::vector<cv::Point> contours;
 
         for (int index = 0; index < n_points; index++)
         {
             double s = L / n_points * index;
-            dPoint *d3 = circLine(s, i, k);
-            contours.push_back(cv::Point(int(d3->x * 500 + 50), img.size().height - int(d3->y * 500 + 50)));
+            DubinsPoint *d = circLine(s, i, k);
+            contours.push_back(cv::Point(int(d->x * 500 + 50), img.size().height - int(d->y * 500 + 50)));
         }
 
         cv::Scalar color;
 
         // switch (color_index)
         // {
-        // case 0:
+        // case 0: // start green
         //     color = cv::Scalar(0, 255, 0);
         //     break;
-        // case 1:
+        // case 1: // middle blue
         //     color = cv::Scalar(255, 0, 0);
         //     break;
-        // case 2:
+        // case 2: // end red
         //     color = cv::Scalar(0, 0, 255);
         //     break;
         // }
 
-        if (color_index == 1) // Escaper
+        switch (color_index)
         {
-            color = cv::Scalar(0, 200, 255);
-        }
-        else // Pursuer
-        {
+        case 0: // pursuer
             color = cv::Scalar(255, 83, 27);
+            break;
+        case 1: // escaper
+            color = cv::Scalar(0, 200, 255);
+            break;
         }
 
+        // add every point to the image connecting it to the neighbour points
         for (int i = 1; i < n_points; i++)
         {
             cv::line(img, contours[i], contours[i - 1], color, 2);
         }
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const dArc &a);
-
+    /**
+     * @brief Convert the Dubins Arc to a vector of Pose
+     *
+     * @return A vector of Pose
+     */
     std::vector<Pose> to_pose_vect()
     {
         std::vector<Pose> pose_vect;
-        double delta = L / 10.0;
+
+        // samples the arc with n points
+        double delta = L / 100.0;
 
         pose_vect.push_back(Pose(delta, i->x, i->y, i->t, k));
-        
-        dPoint *pi = i;
+
+        DubinsPoint *pi = i;
         for (double l = 0.0; l < L; l += delta)
         {
             pi = circLine(delta, pi, k);
@@ -90,9 +125,11 @@ public:
 
         return pose_vect;
     }
+
+    friend std::ostream &operator<<(std::ostream &os, const DubinsArc &a);
 };
 
-std::ostream &operator<<(std::ostream &os, const dArc &a)
+std::ostream &operator<<(std::ostream &os, const DubinsArc &a)
 {
     return os << setprecision(2) << "[" << *(a.i) << " " << *(a.f) << " k: " << a.k << " L: " << a.L << "]";
 }
