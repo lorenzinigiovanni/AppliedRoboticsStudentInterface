@@ -275,7 +275,7 @@ public:
         boost::graph_traits<GraphType>::edge_iterator e, e_end;
         for (boost::tie(e, e_end) = boost::edges(graph); e != e_end; ++e)
         {
-            int distance = (int)(EdgeWeightMap[*e] * 100);
+            int distance = (int)(EdgeWeightMap[*e] * 1000);
             data += "(near l" + std::to_string(e->m_source) + " l" + std::to_string(e->m_target) + ")\n";
             data += "(= (distance l" + std::to_string(e->m_source) + " l" + std::to_string(e->m_target) + ") " + std::to_string(distance) + ")\n";
             data += "(= (distance l" + std::to_string(e->m_target) + " l" + std::to_string(e->m_source) + ") " + std::to_string(distance) + ")\n";

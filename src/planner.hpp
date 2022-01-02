@@ -55,8 +55,15 @@ public:
             int escaper_distance = 0;
             for (int i = 0; i < escaper_index_path.size(); i++)
             {
-                escaper_distance += (int)(100 * graph_map.distance_btw_points(escaper_index_path[i], escaper_index_path[i - 1]));
-                problem << "(= (escaper-cost l" << escaper_index_path[i] << ") " << escaper_distance << ")" << std::endl;
+                if (i == 0)
+                {
+                    problem << "(= (escaper-cost l" << escaper_index_path[i] << ") 100000)" << std::endl;
+                }
+                else
+                {
+                    escaper_distance += (int)(1000 * graph_map.distance_btw_points(escaper_index_path[i], escaper_index_path[i - 1]));
+                    problem << "(= (escaper-cost l" << escaper_index_path[i] << ") " << escaper_distance << ")" << std::endl;
+                }
             }
 
             problem << graph_map.get_missing_escaper_cost_locations(escaper_index_path);
@@ -85,7 +92,7 @@ public:
 
     bool generate_plan()
     {
-        std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 3 -w 0";
+        std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 5 -w 1";
         std::string solution = exec(command.c_str());
 
         std::cout << solution << std::endl;
