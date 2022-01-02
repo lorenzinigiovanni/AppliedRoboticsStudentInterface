@@ -184,11 +184,11 @@ public:
         cv::Scalar color;
         if (problem_name == "escaper")
         {
-            color = cv::Scalar(0, 90, 170);
+            color = cv::Scalar(124, 226, 255);
         }
         else if (problem_name == "pursuer")
         {
-            color = cv::Scalar(255, 0, 230);
+            color = cv::Scalar(255, 138, 100);
         }
 
         for (int i = 1; i < path.size(); i++)

@@ -59,11 +59,11 @@ public:
 
         if (color_index == 1) // Escaper
         {
-            color = cv::Scalar(164, 184, 44);
+            color = cv::Scalar(0, 200, 255);
         }
         else // Pursuer
         {
-            color = cv::Scalar(17, 166, 238);
+            color = cv::Scalar(255, 83, 27);
         }
 
         for (int i = 1; i < n_points; i++)

@@ -182,7 +182,7 @@ public:
             int x2 = int(graph[e->m_target].point.x * 500) + 50;
             int y2 = img.size().height - int(graph[e->m_target].point.y * 500) - 50;
 
-            cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(50, 255, 50), 2);
+            cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(100, 100, 255), 2);
         }
 
         boost::graph_traits<GraphType>::vertex_iterator v, v_end;
@@ -195,19 +195,19 @@ public:
 
             if (graph[*v].type == GATE)
             {
-                color = cv::Scalar(255, 50, 50);
+                color = cv::Scalar(4, 255, 4);
             }
             else if (graph[*v].type == WAYPOINT)
             {
-                color = cv::Scalar(50, 50, 255);
+                color = cv::Scalar(0, 0, 255);
             }
             else if (graph[*v].type == PURSUER)
             {
-                color = cv::Scalar(255, 0, 230);
+                color = cv::Scalar(255, 83, 27);
             }
             else if (graph[*v].type == ESCAPER)
             {
-                color = cv::Scalar(0, 90, 170);
+                color = cv::Scalar(0, 200, 255);
             }
 
             cv::circle(img, cv::Point(x, y), 5, color, cv::FILLED);
