@@ -303,6 +303,27 @@ public:
         return data;
     }
 
+    std::string get_random_gate()
+    {
+        std::string data;
+        std::vector<int> gate_indexes;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            if (graph[i].type == GATE)
+            {
+                gate_indexes.push_back(i);
+            }
+        }
+
+        srand(time(NULL));
+        int random = rand() % gate_indexes.size();
+
+        data += "l" + std::to_string(gate_indexes[random]);
+
+        return data;
+    }
+
     std::string get_locations_relations()
     {
         std::string data;

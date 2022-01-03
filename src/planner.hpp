@@ -19,9 +19,10 @@ class Planner
     std::vector<std::vector<std::string>> data;
     std::vector<Point> path;
     GraphMap graph_map;
+    int complexity;
 
 public:
-    Planner(std::string _problem_name, GraphMap &_graph_map) : problem_name(_problem_name), graph_map(_graph_map) {}
+    Planner(std::string _problem_name, GraphMap &_graph_map, int _complexity) : problem_name(_problem_name), graph_map(_graph_map), complexity(_complexity) {}
 
     void write_problem(std::vector<int> escaper_index_path = std::vector<int>())
     {
@@ -43,7 +44,7 @@ public:
         problem << graph_map.get_locations_relations() << std::endl;
         problem << "(= (total-cost) 0)" << std::endl;
 
-        if (problem_name == "escaper")
+        if (problem_name == "escaper" || problem_name == "escaper_estimated")
         {
             problem << "(escaping)" << std::endl;
         }
@@ -73,9 +74,26 @@ public:
 
         // Declare goal
         problem << "(:goal" << std::endl;
-        if (problem_name == "escaper")
+
+        if (problem_name == "escaper" || problem_name == "escaper_estimated")
         {
-            problem << "(escaped r2)" << std::endl;
+            switch (complexity)
+            {
+            case 1:
+                problem << "(escaped r2)" << std::endl;
+                break;
+            case 2:
+                problem << "(and" << std::endl;
+                problem << "(escaped r2)" << std::endl;
+                problem << "(at r2 " << graph_map.get_random_gate() << ")" << std::endl;
+                problem << ")" << std::endl;
+                break;
+            case 3:
+                break;
+            default:
+                problem << "(escaped r2)" << std::endl;
+                break;
+            }
         }
         else if (problem_name == "pursuer")
         {

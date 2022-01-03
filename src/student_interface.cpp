@@ -94,19 +94,34 @@ namespace student
         graph_map.optimize(intersected_obstacles_borders);
 
         // planner for escaper
-        Planner escaper_planner("escaper", graph_map);
+        Planner escaper_planner("escaper", graph_map, 2);
         escaper_planner.write_problem();
         bool escaper_plan_found = escaper_planner.generate_plan();
         std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
-        std::vector<int> index_path = escaper_planner.extract_path_indexes_from_plan();
+
+        if (!escaper_plan_found)
+        {
+            return false;
+        }
+
+        // planner for estimating escaper path
+        Planner escaper_estimated_planner("escaper_estimated", graph_map, 1);
+        escaper_estimated_planner.write_problem();
+        bool escaper_estimated_plan_found = escaper_estimated_planner.generate_plan();
+        std::vector<int> escaper_estimated_path = escaper_estimated_planner.extract_path_indexes_from_plan();
+
+        if (!escaper_estimated_plan_found)
+        {
+            return false;
+        }
 
         // planner for pursuer
-        Planner pursuer_planner("pursuer", graph_map);
-        pursuer_planner.write_problem(index_path);
+        Planner pursuer_planner("pursuer", graph_map, 1);
+        pursuer_planner.write_problem(escaper_estimated_path);
         bool pursuer_plan_found = pursuer_planner.generate_plan();
         std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
 
-        if (!escaper_plan_found || !pursuer_plan_found)
+        if (!pursuer_plan_found)
         {
             return false;
         }
