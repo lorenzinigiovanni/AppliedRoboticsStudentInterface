@@ -18,8 +18,8 @@
     )
     (:functions
         (total-cost)
-        (escaper-cost ?l1)
-        (distance ?l1 ?l2)
+        (escaper-cost ?l1 - location)
+        (distance ?l1 ?l2 - location)
     )
     (:action move
         :parameters (?r - robot ?from ?to - location)
