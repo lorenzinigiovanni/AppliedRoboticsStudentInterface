@@ -191,9 +191,9 @@ public:
         // scale and normalize angles and curvature
         double th0 = DubinsUtils::mod2pi(pi.t - phi);
         double thf = DubinsUtils::mod2pi(pf.t - phi);
-        double k_max = k_max * lambda;
+        double kp_max = k_max * lambda;
 
-        return StandardForm(th0, thf, k_max, lambda);
+        return StandardForm(th0, thf, kp_max, lambda);
     }
 
     /**
