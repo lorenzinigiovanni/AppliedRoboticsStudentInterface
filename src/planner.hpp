@@ -92,7 +92,7 @@ public:
 
     bool generate_plan()
     {
-        std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 5 -w 1";
+        std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 3 -w 1";
         std::string solution = exec(command.c_str());
 
         std::cout << solution << std::endl;
