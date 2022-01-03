@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <array>
+#include <map>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -18,13 +19,23 @@ class Planner
     std::string problem_name;
     std::vector<std::vector<std::string>> data;
     std::vector<Point> path;
+    std::vector<int> escaper_estimated_path;
     GraphMap graph_map;
     int complexity;
 
 public:
-    Planner(std::string _problem_name, GraphMap &_graph_map, int _complexity) : problem_name(_problem_name), graph_map(_graph_map), complexity(_complexity) {}
+    Planner(std::string _problem_name,
+            GraphMap &_graph_map,
+            int _complexity,
+            std::vector<int> _escaper_estimated_path = std::vector<int>())
+        : problem_name(_problem_name),
+          graph_map(_graph_map),
+          complexity(_complexity),
+          escaper_estimated_path(_escaper_estimated_path)
+    {
+    }
 
-    void write_problem(std::vector<int> escaper_index_path = std::vector<int>())
+    void write_problem()
     {
         std::ofstream problem;
         problem.open("/home/ubuntu/workspace/project/src/pddl/" + problem_name + ".problem.pddl", std::ofstream::out | std::ofstream::trunc);
@@ -32,74 +43,9 @@ public:
         problem << "(define (problem " + problem_name + "-prob)" << std::endl;
         problem << "(:domain pursuer-escaper)" << std::endl;
 
-        // Define objects
-        problem << "(:objects" << std::endl;
-        problem << graph_map.get_locations() << std::endl;
-        problem << graph_map.get_gate_locations() << std::endl;
-        problem << ")" << std::endl;
-
-        // Init robot position, relations between locations and distances
-        problem << "(:init" << std::endl;
-        problem << graph_map.get_robots_locations() << std::endl;
-        problem << graph_map.get_locations_relations() << std::endl;
-        problem << "(= (total-cost) 0)" << std::endl;
-
-        if (problem_name == "escaper" || problem_name == "escaper_estimated")
-        {
-            problem << "(escaping)" << std::endl;
-        }
-        else if (problem_name == "pursuer")
-        {
-            problem << "(pursuing)" << std::endl;
-            problem << std::endl;
-
-            int escaper_distance = 0;
-            for (int i = 0; i < escaper_index_path.size(); i++)
-            {
-                if (i == 0)
-                {
-                    problem << "(= (escaper-cost l" << escaper_index_path[i] << ") 100000)" << std::endl;
-                }
-                else
-                {
-                    escaper_distance += (int)(1000 * graph_map.distance_btw_points(escaper_index_path[i], escaper_index_path[i - 1]));
-                    problem << "(= (escaper-cost l" << escaper_index_path[i] << ") " << escaper_distance << ")" << std::endl;
-                }
-            }
-
-            problem << graph_map.get_missing_escaper_cost_locations(escaper_index_path);
-        }
-
-        problem << ")" << std::endl;
-
-        // Declare goal
-        problem << "(:goal" << std::endl;
-
-        if (problem_name == "escaper" || problem_name == "escaper_estimated")
-        {
-            switch (complexity)
-            {
-            case 1:
-                problem << "(escaped r2)" << std::endl;
-                break;
-            case 2:
-                problem << "(and" << std::endl;
-                problem << "(escaped r2)" << std::endl;
-                problem << "(at r2 " << graph_map.get_random_gate() << ")" << std::endl;
-                problem << ")" << std::endl;
-                break;
-            case 3:
-                break;
-            default:
-                problem << "(escaped r2)" << std::endl;
-                break;
-            }
-        }
-        else if (problem_name == "pursuer")
-        {
-            problem << "(caught r1)" << std::endl;
-        }
-        problem << ")" << std::endl;
+        define_objects(problem);
+        initialize_objects(problem);
+        define_goal(problem);
 
         // Minimize cost
         problem << "(:metric minimize(total-cost))" << std::endl;
@@ -254,5 +200,253 @@ private:
         strings.push_back(str.substr(prev));
 
         return strings;
+    }
+
+    void define_objects(std::ofstream &problem)
+    {
+        problem << "(:objects" << std::endl;
+        problem << graph_map.get_locations() << std::endl;
+        problem << graph_map.get_gate_locations() << std::endl;
+        problem << ")" << std::endl;
+    }
+
+    void initialize_objects(std::ofstream &problem)
+    {
+        problem << "(:init" << std::endl;
+        problem << "(= (total-cost) 0)" << std::endl;
+        problem << graph_map.get_robots_locations() << std::endl;
+        problem << graph_map.get_locations_relations() << std::endl;
+
+        if (problem_name == "escaper" || problem_name == "escaper_estimated")
+        {
+            initialize_objects_escaper(problem);
+        }
+        else if (problem_name == "pursuer")
+        {
+            initialize_objects_pursuer(problem);
+        }
+
+        problem << ")" << std::endl;
+    }
+
+    void initialize_objects_escaper(std::ofstream &problem)
+    {
+        problem << "(escaping)" << std::endl;
+    }
+
+    void initialize_objects_pursuer(std::ofstream &problem)
+    {
+        problem << "(pursuing)" << std::endl;
+        problem << std::endl;
+
+        int escaper_distance = 0;
+        for (int i = 0; i < escaper_estimated_path.size(); i++)
+        {
+            if (i == 0)
+            {
+                problem << "(= (escaper-cost l" << escaper_estimated_path[i] << ") 100000)" << std::endl;
+            }
+            else
+            {
+                escaper_distance += (int)(1000 * graph_map.distance_btw_points(escaper_estimated_path[i], escaper_estimated_path[i - 1]));
+                problem << "(= (escaper-cost l" << escaper_estimated_path[i] << ") " << escaper_distance << ")" << std::endl;
+            }
+        }
+
+        problem << graph_map.get_missing_escaper_cost_locations(escaper_estimated_path);
+    }
+
+    void define_goal(std::ofstream &problem)
+    {
+        problem << "(:goal" << std::endl;
+
+        if (problem_name == "escaper")
+        {
+            define_goal_escaper(problem);
+        }
+        else if (problem_name == "escaper_estimated")
+        {
+            define_goal_escaper_estimated(problem);
+        }
+        else if (problem_name == "pursuer")
+        {
+            define_goal_pursuer(problem);
+        }
+        problem << ")" << std::endl;
+    }
+
+    void define_goal_escaper(std::ofstream &problem)
+    {
+        switch (complexity)
+        {
+        case 1:
+        {
+            problem << "(escaped r2)" << std::endl;
+            break;
+        }
+
+        case 2:
+        {
+            problem << "(and" << std::endl;
+            problem << "(escaped r2)" << std::endl;
+
+            std::string choosen_gate_location = "";
+
+            std::fstream test_file("/home/ubuntu/workspace/project/state/escaper_info.txt");
+            if (!test_file.good())
+            {
+                // decide gate toward which the escaper will head
+                choosen_gate_location = graph_map.get_random_gate();
+
+                std::ofstream file;
+                file.open("/home/ubuntu/workspace/project/state/escaper_info.txt", std::ofstream::out);
+                file << choosen_gate_location << std::endl;
+                file.close();
+            }
+            else
+            {
+                // read from file the decided gate toward which the escaper is headed
+                std::ifstream file;
+                file.open("/home/ubuntu/workspace/project/state/escaper_info.txt", std::ifstream::in);
+
+                std::string line;
+                std::getline(file, line);
+
+                choosen_gate_location = line;
+                file.close();
+            }
+
+            problem << "(at r2 " << choosen_gate_location << ")" << std::endl;
+            problem << ")" << std::endl;
+            break;
+        }
+
+        case 3:
+        {
+            break;
+        }
+
+        default:
+        {
+            problem << "(escaped r2)" << std::endl;
+            break;
+        }
+        }
+    }
+
+    void define_goal_escaper_estimated(std::ofstream &problem)
+    {
+        switch (complexity)
+        {
+        case 1:
+        {
+            problem << "(escaped r2)" << std::endl;
+            break;
+        }
+
+        case 2:
+        {
+            problem << "(and" << std::endl;
+            problem << "(escaped r2)" << std::endl;
+
+            std::map<int, float> distances = graph_map.get_robot_gate_distances();
+
+            std::fstream test_file("/home/ubuntu/workspace/project/state/escaper_estimated_info.txt");
+            if (!test_file.good())
+            {
+                std::ofstream file;
+                file.open("/home/ubuntu/workspace/project/state/escaper_estimated_info.txt", std::ofstream::out);
+
+                for (std::map<int, float>::const_iterator it = distances.begin(); it != distances.end(); it++)
+                {
+                    file << "l" << it->first << "\t";
+                }
+                file << std::endl;
+
+                file.close();
+            }
+
+            std::fstream file;
+            file.open("/home/ubuntu/workspace/project/state/escaper_estimated_info.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+
+            for (std::map<int, float>::const_iterator it = distances.begin(); it != distances.end(); it++)
+            {
+                file << it->second << "\t";
+            }
+            file << std::endl;
+
+            std::map<std::string, std::vector<int>> gates;
+            std::vector<std::string> gates_str;
+
+            int count = 0;
+            std::string line;
+
+            while (std::getline(file, line))
+            {
+                if (count == 0)
+                {
+                    std::vector<std::string> str = split_string(line, "\t");
+                    for (int i = 0; i < str.size(); i++)
+                    {
+                        gates[str[i]] = std::vector<int>();
+                        gates_str.push_back(str[i]);
+                    }
+                }
+                else
+                {
+                    std::vector<std::string> str = split_string(line, "\t");
+                    for (int i = 0; i < str.size(); i++)
+                    {
+                        gates[gates_str[i]].push_back(std::stoi(str[i]));
+                    }
+                }
+
+                count++;
+            }
+
+            file.close();
+
+            // if we do not have enought data use behaviour complexity 1
+            if (count <= 2)
+            {
+                problem << ")" << std::endl;
+                break;
+            }
+
+            int lenght_difference = 0;
+            int index = 0;
+            for (int i = 0; i < gates_str.size(); i++)
+            {
+                int size = gates[gates_str[i]].size();
+                int current_lenght_difference = gates[gates_str[i]][size - 2] - gates[gates_str[i]][size - 1];
+
+                if (current_lenght_difference > lenght_difference)
+                {
+                    lenght_difference = current_lenght_difference;
+                    index = i;
+                }
+            }
+
+            problem << "(at r2 " << gates_str[index] << ")" << std::endl;
+            problem << ")" << std::endl;
+            break;
+        }
+
+        case 3:
+        {
+            break;
+        }
+
+        default:
+        {
+            problem << "(escaped r2)" << std::endl;
+            break;
+        }
+        }
+    }
+
+    void define_goal_pursuer(std::ofstream &problem)
+    {
+        problem << "(caught r1)" << std::endl;
     }
 };

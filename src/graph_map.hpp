@@ -303,6 +303,33 @@ public:
         return data;
     }
 
+    std::map<int, float> get_robot_gate_distances()
+    {
+        std::vector<GraphType::vertex_descriptor> gate_indexes;
+        std::map<int, float> distances;
+        GraphType::vertex_descriptor escaper_index;
+
+        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
+        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+        {
+            if (graph[*v].type == ESCAPER)
+            {
+                escaper_index = *v;
+            }
+            else if (graph[*v].type == GATE)
+            {
+                gate_indexes.push_back(*v);
+            }
+        }
+
+        for (int i = 0; i < gate_indexes.size(); i++)
+        {
+            distances[gate_indexes[i]] = (int)(distance_btw_points(escaper_index, gate_indexes[i]) * 1000);
+        }
+
+        return distances;
+    }
+
     std::string get_random_gate()
     {
         std::string data;

@@ -68,6 +68,8 @@ namespace student
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &paths, const std::string &config_folder)
     {
+        int behavioural_complexity = 2;
+
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
         // offsetting
@@ -94,7 +96,7 @@ namespace student
         graph_map.optimize(intersected_obstacles_borders);
 
         // planner for escaper
-        Planner escaper_planner("escaper", graph_map, 2);
+        Planner escaper_planner("escaper", graph_map, behavioural_complexity);
         escaper_planner.write_problem();
         bool escaper_plan_found = escaper_planner.generate_plan();
         std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
@@ -105,7 +107,7 @@ namespace student
         }
 
         // planner for estimating escaper path
-        Planner escaper_estimated_planner("escaper_estimated", graph_map, 1);
+        Planner escaper_estimated_planner("escaper_estimated", graph_map, behavioural_complexity);
         escaper_estimated_planner.write_problem();
         bool escaper_estimated_plan_found = escaper_estimated_planner.generate_plan();
         std::vector<int> escaper_estimated_path = escaper_estimated_planner.extract_path_indexes_from_plan();
@@ -116,8 +118,8 @@ namespace student
         }
 
         // planner for pursuer
-        Planner pursuer_planner("pursuer", graph_map, 1);
-        pursuer_planner.write_problem(escaper_estimated_path);
+        Planner pursuer_planner("pursuer", graph_map, behavioural_complexity, escaper_estimated_path);
+        pursuer_planner.write_problem();
         bool pursuer_plan_found = pursuer_planner.generate_plan();
         std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
 
@@ -130,14 +132,14 @@ namespace student
         Router pursuer_router;
         pursuer_router.add_path(pursuer_path, theta[0]);
         pursuer_router.elaborate_solution();
-        std::vector<Pose> pursuer_solution = pursuer_router.get_path();
+        std::vector<Pose> pursuer_solution = pursuer_router.get_path(1);
         paths[0].points = pursuer_solution;
 
         // route for escaper
         Router escaper_router;
         escaper_router.add_path(escaper_path, theta[1]);
         escaper_router.elaborate_solution();
-        std::vector<Pose> escaper_solution = escaper_router.get_path();
+        std::vector<Pose> escaper_solution = escaper_router.get_path(1);
         paths[1].points = escaper_solution;
 
         // for (int i = 0; i < paths[1].points.size(); i++)
@@ -148,7 +150,7 @@ namespace student
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000 << "[ms]" << std::endl;
 
-        bool debug_img = true;
+        bool debug_img = false;
         if (debug_img)
         {
             unsigned int size_x = 1000;
