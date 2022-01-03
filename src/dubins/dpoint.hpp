@@ -33,6 +33,13 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const DubinsPoint &_p);
 };
 
+/**
+ * @brief Print Dubins Point in console
+ * 
+ * @param os 
+ * @param a 
+ * @return std::ostream& 
+ */
 std::ostream &operator<<(std::ostream &os, const DubinsPoint &_p)
 {
     return os << "(" << _p.x << " " << _p.y << " " << _p.t << ")";

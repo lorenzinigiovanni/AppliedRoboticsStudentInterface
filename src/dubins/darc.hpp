@@ -111,11 +111,12 @@ public:
     {
         std::vector<Pose> pose_vect;
 
-        // samples the arc with n points
+        // prepare parameter to get samples of the Dubins Arc with n points
         double delta = L / 100.0;
 
         pose_vect.push_back(Pose(delta, i->x, i->y, i->t, k));
 
+        // get vector of pose from a Dubins Arc
         DubinsPoint *pi = i;
         for (double l = 0.0; l < L; l += delta)
         {
@@ -129,6 +130,13 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const DubinsArc &a);
 };
 
+/**
+ * @brief Print Dubins Arc in console
+ * 
+ * @param os 
+ * @param a 
+ * @return std::ostream& 
+ */
 std::ostream &operator<<(std::ostream &os, const DubinsArc &a)
 {
     return os << setprecision(2) << "[" << *(a.i) << " " << *(a.f) << " k: " << a.k << " L: " << a.L << "]";
