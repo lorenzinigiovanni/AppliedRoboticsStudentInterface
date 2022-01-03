@@ -50,13 +50,13 @@ int main()
     std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -50);
     std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 50);
 
-    std::vector<Polygon> merged_paths = LineOffsetter::merge_polygons(offsetted_obstacles);
-    std::vector<Polygon> intersected_paths_borders = LineOffsetter::intersect_polygons(offsetted_borders, merged_paths);
+    std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
+    std::vector<Polygon> intersected_obstacles_borders = LineOffsetter::intersect_polygons(offsetted_borders, merged_obstacles);
 
     // cell decomposition
     CellDecomposition cell_decomposition;
     cell_decomposition.add_polygons(offsetted_borders);
-    cell_decomposition.add_polygons(intersected_paths_borders);
+    cell_decomposition.add_polygons(intersected_obstacles_borders);
     cell_decomposition.create_cdt();
     // cell_decomposition.print_triangles();
 
@@ -64,6 +64,7 @@ int main()
     graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
     graph_map.add_gates(gates);
     graph_map.add_robots(x, y);
+    graph_map.optimize(intersected_obstacles_borders);
 
     Planner escaper_planner("escaper", graph_map);
     escaper_planner.write_problem();
