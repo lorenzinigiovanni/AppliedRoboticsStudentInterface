@@ -7,44 +7,59 @@
 #include <vector>
 #include <cmath>
 
+/**
+ * @brief Compute a Dubins multi-point path using dynamic programming starting from a vector of points
+ *
+ */
 class Router
 {
 private:
-    std::vector<Dubins::Solution> solutions;
-    std::vector<DubinsPoint> dpoints;
+    std::vector<Dubins::Solution> solutions; // solutions of the Dubins paths
+    std::vector<DubinsPoint> dubins_points;  // Dubins points
 
-    double k_max = 22;
-    int n_angle_steps = 32;
-    int iterations = 2;
+    double k_max = 22;      // maximum curvature
+    int n_angle_steps = 32; // number of angles for the discretization of the angle
+    int iterations = 2;     // iterations of the Dubins algorithm
 
 public:
+    /**
+     * @brief Add the path to the router
+     *
+     * @param path Path to add
+     * @param theta_start Initial angle of the robot
+     */
     void add_path(std::vector<Point> &path, float theta_start)
     {
-        /*
-        Compute multi point dubins path using Dynamic Programming
-        */
-
         int path_lenght = path.size();
 
         double angle = 2 * M_PI;
         double angle_step = angle / n_angle_steps;
 
-        std::vector<std::vector<double>> lenghts_m(path_lenght, std::vector<double>(n_angle_steps, 10000.0)); // matrix path_lenght x n_angle_steps
+        // store the length of the path from a point to the end for every point and angle
+        std::vector<std::vector<double>> lenghts_m(path_lenght, std::vector<double>(n_angle_steps, 10000.0));
 
-        std::vector<std::vector<int>> angles_m(path_lenght, std::vector<int>(n_angle_steps, 0)); // matrix path_lenght x n_angle_steps
-        std::vector<std::vector<int>> angles_i(iterations, std::vector<int>(path_lenght, 0));    // matrix iterations x path_lenght
+        // store the angle for every point and angle of the previous point
+        std::vector<std::vector<int>> angles_m(path_lenght, std::vector<int>(n_angle_steps, 0));
 
+        // store the best angle for each iteration and point
+        std::vector<std::vector<int>> angles_i(iterations, std::vector<int>(path_lenght, 0));
+
+        // iteration over the number of iterations
         for (int iteration = 0; iteration < iterations; iteration++)
         {
+            // iteration over the number of points
             for (int n = path_lenght - 2; n >= 0; n--)
             {
-                for (int i = 0; i < n_angle_steps; i++)
+                // iteration for the angle of the FROM point over the number of angles
+                for (int angle_1_index = 0; angle_1_index < n_angle_steps; angle_1_index++)
                 {
-                    for (int j = 0; j < n_angle_steps; j++)
+                    // iteration for the angle of the TO point over the number of angles
+                    for (int angle_2_index = 0; angle_2_index < n_angle_steps; angle_2_index++)
                     {
                         double angle_1 = 0.0;
                         double angle_2 = 0.0;
 
+                        // compute the angle in radiants using the discrete angles of the previous iteration
                         for (int z = 0; z < iteration; z++)
                         {
                             angle_1 += angle_step * angles_i[z][n] * std::pow(3.0 / n_angle_steps, z);
@@ -57,8 +72,9 @@ public:
                             }
                         }
 
-                        angle_1 += angle_step * i * std::pow(3.0 / n_angle_steps, iteration);
-                        angle_2 += angle_step * j * std::pow(3.0 / n_angle_steps, iteration);
+                        // add the current iteration angle properly scaled
+                        angle_1 += angle_step * angle_1_index * std::pow(3.0 / n_angle_steps, iteration);
+                        angle_2 += angle_step * angle_2_index * std::pow(3.0 / n_angle_steps, iteration);
 
                         if (iteration > 0)
                         {
@@ -66,67 +82,80 @@ public:
                             angle_2 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1);
                         }
 
+                        // instantiate the dubins points with the FROM and TO points and the angles
                         DubinsPoint point_1(path[n], angle_1);
                         DubinsPoint point_2(path[n + 1], angle_2);
 
+                        // compute the length of the path from the FROM point to the TO point
                         Dubins::Solution solution = Dubins::solve(point_1, point_2, k_max);
                         double l1 = solution.c.L;
 
+                        // lenght of the path from the TO point to the END
                         double l2 = 0.0;
                         if (n != path_lenght - 2)
                         {
-                            l2 = lenghts_m[n + 1][j];
+                            l2 = lenghts_m[n + 1][angle_2_index];
                         }
 
-                        if (lenghts_m[n][i] > l1 + l2)
+                        // the length of the path from the FROM point to the END is shorter than the previous one
+                        if (lenghts_m[n][angle_1_index] > l1 + l2)
                         {
-                            lenghts_m[n][i] = l1 + l2;
-                            angles_m[n + 1][i] = j;
+                            // the leght of the path from the FROM point
+                            lenghts_m[n][angle_1_index] = l1 + l2;
+
+                            // the angle of the TO point wrt the angle of the FROM point
+                            angles_m[n + 1][angle_1_index] = angle_2_index;
                         }
                     }
                 }
             }
 
-            std::vector<int> prev_angle(iterations);
+            // store the index of the angle in the previous point for each iteration
+            std::vector<int> previous_angle_index(iterations);
 
-            prev_angle[0] = round(theta_start / angle_step);
-
-            for (int i = 1; i < iteration; i++)
+            // find the indexes needed to compute back the angle
+            for (int i = 0; i < iteration; i++)
             {
-                int angle = (int)round(theta_start / angle_step);
+                int angle_index = (int)round(theta_start / angle_step);
                 for (int j = 0; j < i; j++)
                 {
-                    angle += -prev_angle[j] * pow(3 / angle_step, j) + (3.0 / 2.0) * pow(3 / angle_step, j);
+                    angle_index += -previous_angle_index[j] * pow(3 / angle_step, j) + (3.0 / 2.0) * pow(3 / angle_step, j);
                 }
 
-                if (angle >= n_angle_steps)
+                // keep the angle index between 0 and the number of angles - 1
+                if (angle_index >= n_angle_steps)
                 {
-                    angle = 0;
+                    angle_index = 0;
                 }
-                else if (angle < 0)
+                else if (angle_index < 0)
                 {
-                    angle = 0;
+                    angle_index = 0;
                 }
 
-                prev_angle[i] = angle;
+                previous_angle_index[i] = angle_index;
             }
 
+            // compute the best angle for the current iteration for each point
             for (int i = 0; i < path_lenght; i++)
             {
-                int curr_angle = angles_m[i][prev_angle[iteration]];
-                angles_i[iteration][i] = curr_angle;
-                prev_angle[iteration] = curr_angle;
+                // the current angle index is given looking at angles_m in the current point given the previous angles
+                int curr_angle_index = angles_m[i][previous_angle_index[iteration]];
+                angles_i[iteration][i] = curr_angle_index;
+                previous_angle_index[iteration] = curr_angle_index;
             }
         }
 
+        // ad each Dubins point to a Dubins Path
         for (int i = 0; i < path.size(); i++)
         {
             if (i == 0)
             {
-                dpoints.push_back(DubinsPoint(path[i], theta_start));
+                // the first Dubins Point has the robot angle
+                dubins_points.push_back(DubinsPoint(path[i], theta_start));
             }
             else
             {
+                // for the other points compute the angle summing the properly scaled angles by they index
                 double angle = 0.0;
 
                 for (int iteration = 0; iteration < iterations; iteration++)
@@ -139,18 +168,23 @@ public:
                     }
                 }
 
-                dpoints.push_back(DubinsPoint(path[i], angle));
+                dubins_points.push_back(DubinsPoint(path[i], angle));
             }
         }
     }
 
+    /**
+     * @brief Compute the optimal Dubins Path for the given path points
+     *
+     */
     void elaborate_solution()
     {
         double total_length = 0.0;
-        std::vector<Pose> tmp_path;
-        for (int i = 0; i < dpoints.size() - 1; i++)
+
+        // for every section of the path compute a Dubins Solution and add it to the Dubins Path
+        for (int i = 0; i < dubins_points.size() - 1; i++)
         {
-            Dubins::Solution solution = Dubins::solve(dpoints[i], dpoints[i + 1], k_max);
+            Dubins::Solution solution = Dubins::solve(dubins_points[i], dubins_points[i + 1], k_max);
 
             if (solution.pidx >= 0)
             {
@@ -160,30 +194,51 @@ public:
             else
             {
                 std::cout << "Failed to find a solution" << std::endl;
+                break;
             }
         }
+
         std::cout << "Lenght: " << total_length << std::endl;
     }
 
-    std::vector<Pose> get_path(int steps=-1)
+    /**
+     * @brief Get the computed Dubins Path as a vector of Pose
+     *
+     * @param Number of steps to get the path (-1 for all)
+     * @return A vector of Pose that represent the computed Dubins Path
+     */
+    std::vector<Pose> get_path(int steps = 1000000000)
     {
         std::vector<Pose> path;
 
-        if (solutions.size() < steps)
+        // the steps should be smaller than the solution size
+        if (steps > solutions.size())
         {
             steps = solutions.size();
         }
 
+        // for every Dubins Solution compute the current path and add it to the path
         for (int i = 0; i < steps; i++)
         {
-            std::vector<Pose> paths_from_dCurve = solutions[i].c.to_pose_vect();
-            path.insert(path.end(), std::make_move_iterator(paths_from_dCurve.begin()), std::make_move_iterator(paths_from_dCurve.end()));
+            // get the current path and add it to the path
+            std::vector<Pose> current_path = solutions[i].c.to_pose_vect();
+
+            // add the current path to the path
+            path.insert(path.end(), std::make_move_iterator(current_path.begin()), std::make_move_iterator(current_path.end()));
         }
+
         return path;
     }
 
+    /**
+     * @brief Print the path on the image
+     *
+     * @param img The image to add the path to
+     * @param index The index of the robot to color the curve
+     */
     void show_path(cv::Mat &img, unsigned int index)
     {
+        // for every Dubins Solution print it on the image
         for (int i = 0; i < solutions.size(); i++)
         {
             solutions[i].c.show_dcurve(img, index);

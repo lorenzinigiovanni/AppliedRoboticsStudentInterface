@@ -46,7 +46,7 @@ public:
      * @brief Print the Dubins Curve on the image
      *
      * @param img The image to add the Dubins Arc to
-     * @param color_index The index of the robot or the index of the Dubins Arc in the Dubins Curve
+     * @param color_index The index of the robot to color the curve
      */
     void show_dcurve(cv::Mat &img, int color_index)
     {
