@@ -13,7 +13,7 @@ private:
     std::vector<Dubins::Solution> solutions;
     std::vector<DubinsPoint> dpoints;
 
-    double k_max = 25;
+    double k_max = 22;
     int n_angle_steps = 32;
     int iterations = 2;
 

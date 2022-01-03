@@ -73,8 +73,8 @@ namespace student
         // offsetting
         std::vector<Polygon> borders;
         borders.push_back(border);
-        std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -50);
-        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 50);
+        std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -95);
+        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 95);
 
         // merge and intersection
         std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
