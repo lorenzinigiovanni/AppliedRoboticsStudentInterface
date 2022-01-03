@@ -143,33 +143,68 @@ public:
                         near_waypoint = *v;
                     }
                 }
-
-                // To do: if graph[*v].type == PURSUER || graph[*v].type == ESCAPER --> Insert Edge more accordingly
             }
 
-            std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(robot_center, near_waypoint, {tmpDistance}, graph);
+            if (tmpDistance < 0.05)
+            {
+                graph[near_waypoint].type = robot_type;
+                boost::remove_vertex(robot_center, graph);
+            }
+            else
+            {
+                std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(robot_center, near_waypoint, {tmpDistance}, graph);
+            }
         }
     }
 
-    void optimize()
+    void optimize(std::vector<Polygon> obstacles)
     {
-        boost::graph_traits<GraphType>::vertex_iterator v1, v1_end;
-        for (boost::tie(v1, v1_end) = boost::vertices(graph); v1 != v1_end; ++v1)
-        {
-            boost::graph_traits<GraphType>::vertex_iterator v2, v2_end;
-            for (boost::tie(v2, v2_end) = boost::vertices(graph); v2 != v2_end; ++v2)
-            {
-                if (*v1 != *v2)
-                {
-                    float distance = distance_btw_points(*v1, *v2);
+        GraphType copia = graph;
 
-                    if (distance < 0.1)
+        boost::graph_traits<GraphType>::vertex_iterator v1, v1_end;
+        for (boost::tie(v1, v1_end) = boost::vertices(copia); v1 != v1_end; ++v1)
+        {
+            boost::graph_traits<GraphType>::adjacency_iterator near_vertex_i, near_vertex_i_end;
+            for (tie(near_vertex_i, near_vertex_i_end) = boost::adjacent_vertices(*v1, copia); near_vertex_i != near_vertex_i_end; ++near_vertex_i)
+            {
+                if (*v1 != *near_vertex_i)
+                {
+                    boost::graph_traits<GraphType>::adjacency_iterator dist_2_vertex_i, dist_2_vertex_i_end;
+                    for (tie(dist_2_vertex_i, dist_2_vertex_i_end) = boost::adjacent_vertices(*near_vertex_i, copia); dist_2_vertex_i != dist_2_vertex_i_end; ++dist_2_vertex_i)
                     {
-                        std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(*v1, *v2, {distance}, graph);
+                        if (*v1 != *dist_2_vertex_i)
+                        {
+                            bool intersect = false;
+                            for (int i = 0; i < obstacles.size(); i++)
+                            {
+                                for (int j = 0; j < obstacles[i].size(); j++)
+                                {
+                                    if (isIntersecting(graph[*v1].point, graph[*dist_2_vertex_i].point, obstacles[i][j], obstacles[i][(j + 1) % obstacles[i].size()]))
+                                    {
+                                        intersect = true;
+                                        goto label;
+                                    }
+                                }
+                            }
+                            if (!intersect)
+                            {
+                                std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(*v1, *dist_2_vertex_i, {distance_btw_points(*v1, *dist_2_vertex_i)}, graph);
+                                goto label;
+                            }
+
+                        label:
+                            (void)0;
+                        }
                     }
                 }
             }
         }
+    }
+
+    bool isIntersecting(Point &p1, Point &p2, Point &q1, Point &q2)
+    {
+        return (((q1.x - p1.x) * (p2.y - p1.y) - (q1.y - p1.y) * (p2.x - p1.x)) * ((q2.x - p1.x) * (p2.y - p1.y) - (q2.y - p1.y) * (p2.x - p1.x)) < 0) &&
+               (((p1.x - q1.x) * (q2.y - q1.y) - (p1.y - q1.y) * (q2.x - q1.x)) * ((p2.x - q1.x) * (q2.y - q1.y) - (p2.y - q1.y) * (q2.x - q1.x)) < 0);
     }
 
     void show_graph(cv::Mat &img)
