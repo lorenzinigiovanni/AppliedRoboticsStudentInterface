@@ -165,11 +165,16 @@ public:
         std::cout << "Lenght: " << total_length << std::endl;
     }
 
-    std::vector<Pose> get_path()
+    std::vector<Pose> get_path(int steps=-1)
     {
         std::vector<Pose> path;
 
-        for (int i = 0; i < solutions.size(); i++)
+        if (solutions.size() < steps)
+        {
+            steps = solutions.size();
+        }
+
+        for (int i = 0; i < steps; i++)
         {
             std::vector<Pose> paths_from_dCurve = solutions[i].c.to_pose_vect();
             path.insert(path.end(), std::make_move_iterator(paths_from_dCurve.begin()), std::make_move_iterator(paths_from_dCurve.end()));
