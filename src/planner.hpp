@@ -323,6 +323,48 @@ private:
 
         case 3:
         {
+            problem << "(and" << std::endl;
+            problem << "(escaped r2)" << std::endl;
+
+            std::string choosen_gate_location = "";
+
+            std::map<int, float> escaper_distances = graph_map.get_robot_gate_distances(GraphMap::PointType::ESCAPER);
+            std::map<int, float> pursuer_distances = graph_map.get_robot_gate_distances(GraphMap::PointType::PURSUER);
+            std::vector<std::vector<float>> distances(2);
+
+            std::vector<std::string> gates_str;
+
+            for (std::map<int, float>::const_iterator it = escaper_distances.begin(); it != escaper_distances.end(); it++)
+            {
+                gates_str.push_back(std::to_string(it->first));
+            }
+
+            for (std::map<int, float>::const_iterator it = escaper_distances.begin(); it != escaper_distances.end(); it++)
+            {
+                distances[0].push_back(it->second);
+            }
+
+            for (std::map<int, float>::const_iterator it = pursuer_distances.begin(); it != pursuer_distances.end(); it++)
+            {
+                distances[1].push_back(it->second);
+            }
+
+            float L = 100000;
+            int index;
+            for (int i = 0; i < distances[0].size(); i++)
+            {
+                float tmp = distances[0][i] - distances[1][i];
+                if (tmp < L)
+                {
+                    index = i;
+                    L = tmp;
+                }
+            }
+
+            choosen_gate_location = "l" + gates_str[index];
+
+            problem << "(at r2 " << choosen_gate_location << ")" << std::endl;
+            problem << ")" << std::endl;
             break;
         }
 
@@ -345,11 +387,12 @@ private:
         }
 
         case 2:
+        case 3:
         {
             problem << "(and" << std::endl;
             problem << "(escaped r2)" << std::endl;
 
-            std::map<int, float> distances = graph_map.get_robot_gate_distances();
+            std::map<int, float> distances = graph_map.get_robot_gate_distances(GraphMap::PointType::ESCAPER);
 
             std::fstream test_file("/home/ubuntu/workspace/project/state/escaper_estimated_info.txt");
             if (!test_file.good())
@@ -429,11 +472,6 @@ private:
 
             problem << "(at r2 " << gates_str[index] << ")" << std::endl;
             problem << ")" << std::endl;
-            break;
-        }
-
-        case 3:
-        {
             break;
         }
 
