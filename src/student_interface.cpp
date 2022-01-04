@@ -68,7 +68,7 @@ namespace student
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &paths, const std::string &config_folder)
     {
-        int behavioural_complexity = 2;
+        int behavioural_complexity = 3;
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
