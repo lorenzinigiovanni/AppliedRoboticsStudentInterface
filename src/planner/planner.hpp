@@ -73,6 +73,12 @@ public:
         std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 3 -w 1";
         std::string solution = exec(command.c_str());
 
+        if (solution.find("weighted A* search space empty! problem proven unsolvable.") != std::string::npos)
+        {
+            std::cout << "FAIL TO FIND A PLAN" << std::endl;
+            return false;
+        }
+
         std::cout << solution << std::endl;
 
         std::vector<std::string> lines = split_string(solution, "\n");
@@ -173,7 +179,8 @@ public:
 
         if (cost == 0)
         {
-            std::cout << "FAIL TO FIND A PLAN" << std::endl;
+            std::cout << "FOUND AN EMPTY PLAN" << std::endl;
+            path_indexes.push_back(get_robot_location());
         }
 
         return path_indexes;
@@ -278,6 +285,8 @@ protected:
     // goal definitions
 
     virtual void define_goal(std::ofstream &problem) = 0;
+
+    int virtual get_robot_location() = 0;
 
     // utilities
 

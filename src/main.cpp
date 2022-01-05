@@ -78,46 +78,53 @@ int main()
     graph_map.add_robots(x, y);
     graph_map.optimize(convex_hull);
 
+    // Routers
+    Router *pursuer_router;
+    Router *evader_router;
+
+    // Planners
+    PlannerEvader *evader_planner;
+    PlannerEvaderEstimate *evader_estimated_planner;
+    PlannerPursuer *pursuer_planner;
+
     // Planner for evader
-    PlannerEvader evader_planner(graph_map, behavioural_complexity);
-    evader_planner.write_problem();
-    bool evader_plan_found = evader_planner.generate_plan();
-    std::vector<Point> evader_path = evader_planner.extract_path_from_plan();
+    evader_planner = new PlannerEvader(graph_map, behavioural_complexity);
+    evader_planner->write_problem();
+    bool evader_plan_found = evader_planner->generate_plan();
+    std::vector<Point> evader_path = evader_planner->extract_path_from_plan();
 
     // Planner for estimating evader path
-    PlannerEvaderEstimate evader_estimated_planner(graph_map, behavioural_complexity);
-    evader_estimated_planner.write_problem();
-    bool evader_estimated_plan_found = evader_estimated_planner.generate_plan();
-    std::vector<int> evader_estimated_path = evader_estimated_planner.extract_path_indexes_from_plan();
+    evader_estimated_planner = new PlannerEvaderEstimate(graph_map, behavioural_complexity);
+    evader_estimated_planner->write_problem();
+    bool evader_estimated_plan_found = evader_estimated_planner->generate_plan();
+    std::vector<int> evader_estimated_path = evader_estimated_planner->extract_path_indexes_from_plan();
 
-    if (!evader_estimated_plan_found)
+    if (evader_estimated_plan_found)
     {
-        return false;
-    }
-    // Planner for pursuer
-    PlannerPursuer pursuer_planner(graph_map, behavioural_complexity, evader_estimated_path);
-    pursuer_planner.write_problem();
-    bool pursuer_plan_found = pursuer_planner.generate_plan();
-    std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
+        // Planner for pursuer
+        pursuer_planner = new PlannerPursuer(graph_map, behavioural_complexity, evader_estimated_path);
+        pursuer_planner->write_problem();
+        bool pursuer_plan_found = pursuer_planner->generate_plan();
+        std::vector<Point> pursuer_path = pursuer_planner->extract_path_from_plan();
 
-    if (!pursuer_plan_found)
+        if (pursuer_plan_found)
+        {
+            // Router for pursuer
+            pursuer_router = new Router();
+            pursuer_router->add_path(pursuer_path, theta[0]);
+            pursuer_router->elaborate_solution();
+            std::vector<Pose> pursuer_solution = pursuer_router->get_path(1);
+        }
+    }
+
+    if (evader_plan_found)
     {
-        return false;
+        // Route for evader
+        evader_router = new Router();
+        evader_router->add_path(evader_path, theta[1]);
+        evader_router->elaborate_solution();
+        std::vector<Pose> evader_solution = evader_router->get_path(1);
     }
-
-    // Router for pursuer
-    Router pursuer_router;
-    pursuer_router.add_path(pursuer_path, theta[0]);
-    pursuer_router.elaborate_solution();
-    std::vector<Pose> pursuer_solution = pursuer_router.get_path();
-    std::cout << "Pursuer solution size: " << pursuer_solution.size() << std::endl;
-
-    // Route for evader
-    Router evader_router;
-    evader_router.add_path(evader_path, theta[0]);
-    evader_router.elaborate_solution();
-    std::vector<Pose> evader_solution = evader_router.get_path();
-    std::cout << "Evader solution size: " << evader_solution.size() << std::endl;
 
     bool debug_img = true;
     if (debug_img)
@@ -131,15 +138,34 @@ int main()
 
         graph_map.show_graph(img);
 
-        evader_planner.show_plan(img);
-        pursuer_planner.show_plan(img);
+        if (pursuer_planner != nullptr)
+        {
+            pursuer_planner->show_plan(img);
+        }
+        if (evader_planner != nullptr)
+        {
+            evader_planner->show_plan(img);
+        }
 
-        pursuer_router.show_path(img, 0);
-        evader_router.show_path(img, 1);
+        if (pursuer_router != nullptr)
+        {
+            pursuer_router->show_path(img, 0);
+        }
+        if (evader_router != nullptr)
+        {
+            evader_router->show_path(img, 1);
+        }
 
         cv::imshow("Image", img);
         cv::waitKey(0);
     }
+
+    // Deletes
+    delete pursuer_router;
+    delete evader_router;
+    delete evader_planner;
+    delete evader_estimated_planner;
+    delete pursuer_planner;
 
     return 0;
 }

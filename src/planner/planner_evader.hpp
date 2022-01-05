@@ -138,4 +138,9 @@ protected:
         }
         }
     }
+
+    int virtual get_robot_location()
+    {
+        return graph_map.get_evader_index();
+    }
 };

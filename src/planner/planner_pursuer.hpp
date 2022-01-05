@@ -55,4 +55,9 @@ protected:
 
         return data;
     }
+
+    int virtual get_robot_location()
+    {
+        return graph_map.get_pursuer_index();
+    }
 };

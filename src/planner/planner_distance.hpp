@@ -40,4 +40,16 @@ protected:
     {
         problem << "(at r" << std::to_string(robot_index) << " l" << std::to_string(gate_location) << ")" << std::endl;
     }
+
+    int virtual get_robot_location()
+    {
+        if (robot_index == 1)
+        {
+            return graph_map.get_pursuer_index();
+        }
+        else if (robot_index == 2)
+        {
+            return graph_map.get_evader_index();
+        }
+    }
 };
