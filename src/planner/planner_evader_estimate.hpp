@@ -1,6 +1,7 @@
 #pragma once
 
 #include "planner.hpp"
+#include "planner_distance.hpp"
 
 class PlannerEvaderEstimate : public virtual Planner
 {
@@ -34,7 +35,16 @@ protected:
             problem << "(and" << std::endl;
             problem << "(evaded r2)" << std::endl;
 
-            std::map<int, float> distances = graph_map.get_robot_gate_distances(GraphMap::PointType::ESCAPER);
+            std::vector<int> gates = graph_map.get_gates_indexes();
+
+            std::map<int, int> evader_distances;
+            for (int i = 0; i < gates.size(); i++)
+            {
+                PlannerDistance distance_planner(graph_map, gates[i], 2);
+                distance_planner.write_problem();
+                distance_planner.generate_plan();
+                evader_distances[gates[i]] = distance_planner.get_cost();
+            }
 
             std::fstream test_file("/home/ubuntu/workspace/project/state/evader_estimated_info.txt");
             if (!test_file.good())
@@ -42,7 +52,7 @@ protected:
                 std::ofstream file;
                 file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::ofstream::out);
 
-                for (std::map<int, float>::const_iterator it = distances.begin(); it != distances.end(); it++)
+                for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
                 {
                     file << "l" << it->first << "\t";
                 }
@@ -54,13 +64,13 @@ protected:
             std::fstream file;
             file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::fstream::in | std::fstream::out | std::fstream::app);
 
-            for (std::map<int, float>::const_iterator it = distances.begin(); it != distances.end(); it++)
+            for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
             {
                 file << it->second << "\t";
             }
             file << std::endl;
 
-            std::map<std::string, std::vector<int>> gates;
+            std::map<std::string, std::vector<int>> gates_map;
             std::vector<std::string> gates_str;
 
             int count = 0;
@@ -73,7 +83,7 @@ protected:
                     std::vector<std::string> str = split_string(line, "\t");
                     for (int i = 0; i < str.size(); i++)
                     {
-                        gates[str[i]] = std::vector<int>();
+                        gates_map[str[i]] = std::vector<int>();
                         gates_str.push_back(str[i]);
                     }
                 }
@@ -82,7 +92,7 @@ protected:
                     std::vector<std::string> str = split_string(line, "\t");
                     for (int i = 0; i < str.size(); i++)
                     {
-                        gates[gates_str[i]].push_back(std::stoi(str[i]));
+                        gates_map[gates_str[i]].push_back(std::stoi(str[i]));
                     }
                 }
 
@@ -102,8 +112,8 @@ protected:
             int index = 0;
             for (int i = 0; i < gates_str.size(); i++)
             {
-                int size = gates[gates_str[i]].size();
-                int current_lenght_difference = gates[gates_str[i]][size - 2] - gates[gates_str[i]][size - 1];
+                int size = gates_map[gates_str[i]].size();
+                int current_lenght_difference = gates_map[gates_str[i]][size - 2] - gates_map[gates_str[i]][size - 1];
 
                 if (current_lenght_difference > lenght_difference)
                 {

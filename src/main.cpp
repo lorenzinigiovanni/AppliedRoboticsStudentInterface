@@ -117,7 +117,7 @@ int main()
     evader_router.add_path(evader_path, theta[0]);
     evader_router.elaborate_solution();
     std::vector<Pose> evader_solution = evader_router.get_path();
-    std::cout << "Escaper solution size: " << evader_solution.size() << std::endl;
+    std::cout << "Evader solution size: " << evader_solution.size() << std::endl;
 
     bool debug_img = true;
     if (debug_img)

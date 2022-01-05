@@ -1,6 +1,7 @@
 #pragma once
 
 #include "planner.hpp"
+#include "planner_distance.hpp"
 
 class PlannerEvader : public virtual Planner
 {
@@ -72,32 +73,50 @@ protected:
 
             std::string choosen_gate_location = "";
 
-            std::map<int, float> evader_distances = graph_map.get_robot_gate_distances(GraphMap::PointType::ESCAPER);
-            std::map<int, float> pursuer_distances = graph_map.get_robot_gate_distances(GraphMap::PointType::PURSUER);
-            std::vector<std::vector<float>> distances(2);
+            std::vector<int> gates = graph_map.get_gates_indexes();
+
+            std::map<int, int> pursuer_distances;
+            for (int i = 0; i < gates.size(); i++)
+            {
+                PlannerDistance distance_planner(graph_map, gates[i], 1);
+                distance_planner.write_problem();
+                distance_planner.generate_plan();
+                pursuer_distances[gates[i]] = distance_planner.get_cost();
+            }
+
+            std::map<int, int> evader_distances;
+            for (int i = 0; i < gates.size(); i++)
+            {
+                PlannerDistance distance_planner(graph_map, gates[i], 2);
+                distance_planner.write_problem();
+                distance_planner.generate_plan();
+                evader_distances[gates[i]] = distance_planner.get_cost();
+            }
+
+            std::vector<std::vector<int>> distances(2);
 
             std::vector<std::string> gates_str;
 
-            for (std::map<int, float>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
+            for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
             {
                 gates_str.push_back(std::to_string(it->first));
             }
 
-            for (std::map<int, float>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
+            for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
             {
                 distances[0].push_back(it->second);
             }
 
-            for (std::map<int, float>::const_iterator it = pursuer_distances.begin(); it != pursuer_distances.end(); it++)
+            for (std::map<int, int>::const_iterator it = pursuer_distances.begin(); it != pursuer_distances.end(); it++)
             {
                 distances[1].push_back(it->second);
             }
 
-            float L = 100000;
+            int L = 100000;
             int index;
             for (int i = 0; i < distances[0].size(); i++)
             {
-                float tmp = distances[0][i] - distances[1][i];
+                int tmp = distances[0][i] - distances[1][i];
                 if (tmp < L)
                 {
                     index = i;

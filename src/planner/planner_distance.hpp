@@ -4,16 +4,15 @@
 
 class PlannerDistance : public virtual Planner
 {
-public:
-    std::string gate_location;
+    int gate_location;
     int robot_index;
 
+public:
     PlannerDistance(
         GraphMap &_graph_map,
-        int _complexity,
-        std::string _gate_location,
+        int _gate_location,
         int _robot_index)
-        : Planner("distance", _graph_map, _complexity),
+        : Planner("distance", _graph_map, 0),
           gate_location(_gate_location),
           robot_index(_robot_index)
     {
@@ -39,6 +38,6 @@ protected:
 
     void define_goal(std::ofstream &problem)
     {
-        problem << "(at r" << std::to_string(robot_index) << " " << gate_location << ")" << std::endl;
+        problem << "(at r" << std::to_string(robot_index) << " l" << std::to_string(gate_location) << ")" << std::endl;
     }
 };

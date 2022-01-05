@@ -23,21 +23,14 @@
 
 class GraphMap
 {
-    // 1) How to store edges 2) How to store vertices 3) Type of graph (directed, undirected, bidirectional)
-    // 4) Vertex property 5) Edge property type
-    // using EdgeWeightProperty = boost::property<boost::edge_weight_t, float>;
-    typedef boost::property<boost::edge_weight_t, float> EdgeWeightProperty;
-
-public:
     enum PointType
     {
         GATE,
         WAYPOINT,
         PURSUER,
-        ESCAPER,
+        EVADER,
     };
 
-private:
     class VertexProperty
     {
     public:
@@ -48,14 +41,20 @@ private:
         VertexProperty(Point point, PointType type) : point(point), type(type) {}
     };
 
+    typedef boost::property<boost::edge_weight_t, float> EdgeWeightProperty;
+
 public:
+    // 1) How to store edges 2) How to store vertices 3) Type of graph (directed, undirected, bidirectional)
+    // 4) Vertex property 5) Edge property type
     typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, VertexProperty, EdgeWeightProperty> GraphType;
-    boost::property_map<GraphType, boost::edge_weight_t>::type EdgeWeightMap = get(boost::edge_weight, graph);
 
 private:
     GraphType graph;
+
     std::map<size_t, GraphType::vertex_descriptor> triangle_vertex_map;
     std::map<std::set<size_t>, GraphType::vertex_descriptor> line_vertex_map;
+    
+    boost::property_map<GraphType, boost::edge_weight_t>::type EdgeWeightMap = get(boost::edge_weight, graph);
 
 public:
     void create_graph(std::vector<CDT::Triangle> &triangles, std::vector<Point> &points)
@@ -125,7 +124,7 @@ public:
             }
             else
             {
-                robot_type = ESCAPER;
+                robot_type = EVADER;
             }
 
             VertexProperty property(Point(x[i], y[i]), robot_type);
@@ -243,7 +242,7 @@ public:
             {
                 color = cv::Scalar(255, 83, 27);
             }
-            else if (graph[*v].type == ESCAPER)
+            else if (graph[*v].type == EVADER)
             {
                 color = cv::Scalar(0, 200, 255);
             }
@@ -274,7 +273,7 @@ public:
 
         for (int i = 0; i < graph.m_vertices.size(); i++)
         {
-            if (graph[i].type == PURSUER || graph[i].type == ESCAPER)
+            if (graph[i].type == PURSUER || graph[i].type == EVADER)
             {
                 indexes.push_back(i);
             }
@@ -304,7 +303,7 @@ public:
 
         for (int i = 0; i < graph.m_vertices.size(); i++)
         {
-            if (graph[i].type == ESCAPER)
+            if (graph[i].type == EVADER)
             {
                 index = i;
             }
