@@ -145,7 +145,7 @@ public:
             }
         }
 
-        // ad each Dubins point to a Dubins Path
+        // add each Dubins point to a Dubins Path
         for (int i = 0; i < path.size(); i++)
         {
             if (i == 0)
