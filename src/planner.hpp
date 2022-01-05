@@ -101,7 +101,7 @@ public:
                 2: MOVE R2 L5 L4
                 3: MOVE R2 L4 L0
         */
-
+        std::cout << "*************" << problem_name << "*************" << std::endl;
         std::vector<int> path_indexes;
 
         for (int i = 0; i < data.size(); i++)
