@@ -90,7 +90,7 @@ public:
         case 0: // pursuer
             color = cv::Scalar(255, 83, 27);
             break;
-        case 1: // escaper
+        case 1: // evader
             color = cv::Scalar(0, 200, 255);
             break;
         }

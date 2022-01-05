@@ -3,7 +3,9 @@
 #include "cell_decomposition.hpp"
 #include "line_offsetter.hpp"
 #include "graph_map.hpp"
-#include "planner.hpp"
+#include "planner/planner_evader_estimate.hpp"
+#include "planner/planner_evader.hpp"
+#include "planner/planner_pursuer.hpp"
 #include "dubins/dpoint.hpp"
 #include "dubins/dubins.hpp"
 #include "router.hpp"
@@ -77,7 +79,7 @@ namespace student
         std::vector<Polygon> borders;
         borders.push_back(border);
         std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -95);
-        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 95);
+        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 95); //95
 
         // Merge and intersection
         std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
@@ -99,30 +101,30 @@ namespace student
         graph_map.add_robots(x, y);
         graph_map.optimize(convex_hull);
 
-        // Planner for escaper
-        Planner escaper_planner("escaper", graph_map, behavioural_complexity);
-        escaper_planner.write_problem();
-        bool escaper_plan_found = escaper_planner.generate_plan();
-        std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
+        // Planner for evader
+        PlannerEvader evader_planner(graph_map, behavioural_complexity);
+        evader_planner.write_problem();
+        bool evader_plan_found = evader_planner.generate_plan();
+        std::vector<Point> evader_path = evader_planner.extract_path_from_plan();
 
-        if (!escaper_plan_found)
+        if (!evader_plan_found)
         {
             return false;
         }
 
-        // Planner for estimating escaper path
-        Planner escaper_estimated_planner("escaper_estimated", graph_map, behavioural_complexity);
-        escaper_estimated_planner.write_problem();
-        bool escaper_estimated_plan_found = escaper_estimated_planner.generate_plan();
-        std::vector<int> escaper_estimated_path = escaper_estimated_planner.extract_path_indexes_from_plan();
+        // Planner for estimating evader path
+        PlannerEvaderEstimate evader_estimated_planner(graph_map, behavioural_complexity);
+        evader_estimated_planner.write_problem();
+        bool evader_estimated_plan_found = evader_estimated_planner.generate_plan();
+        std::vector<int> evader_estimated_path = evader_estimated_planner.extract_path_indexes_from_plan();
 
-        if (!escaper_estimated_plan_found)
+        if (!evader_estimated_plan_found)
         {
             return false;
         }
 
         // Planner for pursuer
-        Planner pursuer_planner("pursuer", graph_map, behavioural_complexity, escaper_estimated_path);
+        PlannerPursuer pursuer_planner(graph_map, behavioural_complexity, evader_estimated_path);
         pursuer_planner.write_problem();
         bool pursuer_plan_found = pursuer_planner.generate_plan();
         std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
@@ -139,12 +141,12 @@ namespace student
         std::vector<Pose> pursuer_solution = pursuer_router.get_path(1);
         paths[0].points = pursuer_solution;
 
-        // Route for escaper
-        Router escaper_router;
-        escaper_router.add_path(escaper_path, theta[1]);
-        escaper_router.elaborate_solution();
-        std::vector<Pose> escaper_solution = escaper_router.get_path(1);
-        paths[1].points = escaper_solution;
+        // Route for evader
+        Router evader_router;
+        evader_router.add_path(evader_path, theta[1]);
+        evader_router.elaborate_solution();
+        std::vector<Pose> evader_solution = evader_router.get_path(1);
+        paths[1].points = evader_solution;
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000 << "[ms]" << std::endl;
@@ -162,10 +164,10 @@ namespace student
             graph_map.show_graph(img);
 
             pursuer_planner.show_plan(img);
-            escaper_planner.show_plan(img);
+            evader_planner.show_plan(img);
 
             pursuer_router.show_path(img, 0);
-            escaper_router.show_path(img, 1);
+            evader_router.show_path(img, 1);
 
             cv::imshow("Image", img);
             cv::waitKey(0);

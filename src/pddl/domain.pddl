@@ -1,24 +1,24 @@
-(define (domain pursuer-escaper)
+(define (domain pursuer-evader)
     (:requirements :adl :derived-predicates :action-costs)
     (:types
-        escaper pursuer - robot
+        evader pursuer - robot
         gate waypoint - location
     )
     (:constants
         r1 - pursuer
-        r2 - escaper
+        r2 - evader
     )
     (:predicates
         (at ?r - robot ?l - location)
         (near ?l1 ?l2 - location)
-        (escaped ?e - escaper)
+        (evaded ?e - evader)
         (caught ?p - pursuer)
         (pursuing)
-        (escaping)
+        (evading)
     )
     (:functions
         (total-cost)
-        (escaper-cost ?l1 - location)
+        (evader-cost ?l1 - location)
         (distance ?l1 ?l2 - location)
     )
     (:action move
@@ -31,7 +31,7 @@
                 )
                 (and
                     (= ?r r2)
-                    (escaping)
+                    (evading)
                 )
             )
             (or
@@ -47,7 +47,7 @@
         )
     )
     (:derived
-        (escaped ?e - escaper)
+        (evaded ?e - evader)
         (and
             (exists
                 (?g - gate)
@@ -62,7 +62,7 @@
                 (?l - location)
                 (and
                     (at r1 ?l)
-                    (<= (total-cost) (escaper-cost ?l))
+                    (<= (total-cost) (evader-cost ?l))
                 )
             )
         )

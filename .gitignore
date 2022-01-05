@@ -39,5 +39,5 @@ boost/
 sas_plan.*
 *.problem.pddl
 ff
-escaper_info.txt
-escaper_estimated_info.txt
+evader_info.txt
+evader_estimated_info.txt

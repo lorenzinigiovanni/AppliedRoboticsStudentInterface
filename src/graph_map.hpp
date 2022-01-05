@@ -25,6 +25,7 @@ class GraphMap
 {
     // 1) How to store edges 2) How to store vertices 3) Type of graph (directed, undirected, bidirectional)
     // 4) Vertex property 5) Edge property type
+    // using EdgeWeightProperty = boost::property<boost::edge_weight_t, float>;
     typedef boost::property<boost::edge_weight_t, float> EdgeWeightProperty;
 
 public:
@@ -47,12 +48,12 @@ private:
         VertexProperty(Point point, PointType type) : point(point), type(type) {}
     };
 
+public:
     typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, VertexProperty, EdgeWeightProperty> GraphType;
-
-    GraphType graph;
-
     boost::property_map<GraphType, boost::edge_weight_t>::type EdgeWeightMap = get(boost::edge_weight, graph);
 
+private:
+    GraphType graph;
     std::map<size_t, GraphType::vertex_descriptor> triangle_vertex_map;
     std::map<std::set<size_t>, GraphType::vertex_descriptor> line_vertex_map;
 
@@ -252,58 +253,125 @@ public:
         }
     }
 
-    std::string get_locations()
+    std::vector<int> get_gates_indexes()
     {
-        std::string data;
-
-        for (int i = 0; i < graph.m_vertices.size(); i++)
-        {
-            if (graph[i].type != GATE)
-            {
-                data += "l" + std::to_string(i) + " ";
-            }
-        }
-
-        data += "- waypoint";
-
-        return data;
-    }
-
-    std::string get_robots_locations()
-    {
-        // (at r1 l0)
-        std::string data;
-
-        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
-        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
-        {
-            if (graph[*v].type == PURSUER)
-            {
-                data += "(at r1 l" + std::to_string(*v) + ")\n";
-            }
-            else if (graph[*v].type == ESCAPER)
-            {
-                data += "(at r2 l" + std::to_string(*v) + ")\n";
-            }
-        }
-        return data;
-    }
-
-    std::string get_gate_locations()
-    {
-        std::string data;
+        std::vector<int> indexes;
 
         for (int i = 0; i < graph.m_vertices.size(); i++)
         {
             if (graph[i].type == GATE)
             {
-                data += "l" + std::to_string(i) + " ";
+                indexes.push_back(i);
             }
         }
 
-        data += "- gate";
+        return indexes;
+    }
 
-        return data;
+    std::vector<int> get_robots_indexes()
+    {
+        std::vector<int> indexes;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            if (graph[i].type == PURSUER || graph[i].type == ESCAPER)
+            {
+                indexes.push_back(i);
+            }
+        }
+
+        return indexes;
+    }
+
+    int get_pursuer_index()
+    {
+        int index;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            if (graph[i].type == PURSUER)
+            {
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
+    int get_evader_index()
+    {
+        int index;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            if (graph[i].type == ESCAPER)
+            {
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
+    std::vector<int> get_waypoint_indexes()
+    {
+        std::vector<int> indexes;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            if (graph[i].type == WAYPOINT)
+            {
+                indexes.push_back(i);
+            }
+        }
+
+        return indexes;
+    }
+
+    std::vector<int> get_locations_indexes()
+    {
+        std::vector<int> indexes;
+
+        for (int i = 0; i < graph.m_vertices.size(); i++)
+        {
+            indexes.push_back(i);
+        }
+
+        return indexes;
+    }
+
+    std::vector<int> get_missing_evader_locations_indexes(std::vector<int> evader_index_path)
+    {
+        std::vector<int> indexes;
+
+        boost::graph_traits<GraphMap::GraphType>::vertex_iterator v, v_end;
+        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
+        {
+            bool inserted = false;
+            for (int i = 0; i < evader_index_path.size(); i++)
+            {
+                if (*v == evader_index_path[i])
+                {
+                    inserted = true;
+                }
+            }
+            if (inserted != true)
+            {
+                indexes.push_back(*v);
+            }
+        }
+
+        return indexes;
+    }
+
+    Point point_from_index(int i)
+    {
+        return graph[i].point;
+    }
+
+    float distance_btw_points(GraphType::vertex_descriptor v1, GraphType::vertex_descriptor v2)
+    {
+        return sqrt(pow(graph[v2].point.x - graph[v1].point.x, 2) + pow(graph[v2].point.y - graph[v1].point.y, 2));
     }
 
     std::map<int, float> get_robot_gate_distances(PointType robot)
@@ -333,75 +401,23 @@ public:
         return distances;
     }
 
-    std::string get_random_gate()
+    std::map<std::pair<int, int>, int> get_locations_distances()
     {
-        std::string data;
-        std::vector<int> gate_indexes;
+        std::map<std::pair<int, int>, int> data;
 
-        for (int i = 0; i < graph.m_vertices.size(); i++)
-        {
-            if (graph[i].type == GATE)
-            {
-                gate_indexes.push_back(i);
-            }
-        }
-
-        srand(time(NULL));
-        int random = rand() % gate_indexes.size();
-
-        data += "l" + std::to_string(gate_indexes[random]);
-
-        return data;
-    }
-
-    std::string get_locations_relations()
-    {
-        std::string data;
-
-        boost::graph_traits<GraphType>::edge_iterator e, e_end;
+        boost::graph_traits<GraphMap::GraphType>::edge_iterator e, e_end;
         for (boost::tie(e, e_end) = boost::edges(graph); e != e_end; ++e)
         {
-            int distance = (int)(EdgeWeightMap[*e] * 1000);
-            data += "(near l" + std::to_string(e->m_source) + " l" + std::to_string(e->m_target) + ")\n";
-            data += "(= (distance l" + std::to_string(e->m_source) + " l" + std::to_string(e->m_target) + ") " + std::to_string(distance) + ")\n";
-            data += "(= (distance l" + std::to_string(e->m_target) + " l" + std::to_string(e->m_source) + ") " + std::to_string(distance) + ")\n";
+            std::pair<int, int> locations;
+            locations.first = e->m_source;
+            locations.second = e->m_target;
+
+            int distance = (int)(GraphMap::EdgeWeightMap[*e] * 1000);
+
+            data[locations] = distance;
         }
 
         return data;
-    }
-
-    std::string get_missing_escaper_cost_locations(std::vector<int> escaper_index_path)
-    {
-        std::string data;
-
-        boost::graph_traits<GraphType>::vertex_iterator v, v_end;
-        for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
-        {
-            bool inserted = false;
-            for (int i = 0; i < escaper_index_path.size(); i++)
-            {
-                if (*v == escaper_index_path[i])
-                {
-                    inserted = true;
-                }
-            }
-            if (inserted != true)
-            {
-                data += "(= (escaper-cost l" + std::to_string(*v) + ") -1)\n";
-            }
-        }
-
-        return data;
-    }
-
-    Point point_from_index(int i)
-    {
-        return graph[i].point;
-    }
-
-    float distance_btw_points(GraphType::vertex_descriptor v1, GraphType::vertex_descriptor v2)
-    {
-        return sqrt(pow(graph[v2].point.x - graph[v1].point.x, 2) + pow(graph[v2].point.y - graph[v1].point.y, 2));
     }
 
 private:
