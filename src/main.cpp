@@ -1,6 +1,7 @@
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "clipper/clipper.hpp"
 #include "line_offsetter.hpp"
+#include "convex_hull.hpp"
 #include "cell_decomposition.hpp"
 #include "graph_map.hpp"
 #include "planner.hpp"
@@ -12,21 +13,26 @@
 
 int main()
 {
+    int behavioural_complexity = 3;
+
     // Robot locations
     std::vector<float> x;
     std::vector<float> y;
     std::vector<float> theta;
 
+    // Robot 1 location
     x.push_back(0.15);
-    x.push_back(0.15);
-    x.push_back(0.0);
-
     y.push_back(0.15);
-    y.push_back(0.65);
-    y.push_back(0.0);
-
     theta.push_back(M_PI_2);
+
+    // Robot 1 location
+    x.push_back(0.15);
+    y.push_back(0.65);
     theta.push_back(M_PI_4);
+
+    // Robot 2 location
+    x.push_back(0.0);
+    y.push_back(0.0);
     theta.push_back(0.0);
 
     // Borders arena
@@ -44,48 +50,58 @@ int main()
     obstacles.push_back(Polygon({Point(0.6, 0.6), Point(0.6, 0.75), Point(0.75, 0.75), Point(0.75, 0.6)}));
     // obstacles.push_back(Polygon({Point(0.2, 0.4), Point(0.2, 0.3), Point(0.4, 0.2), Point(0.1, 0.4)}));
 
+    // Offsetting
     std::vector<Polygon> borders;
     borders.push_back(border);
-
     std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -50);
     std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 50);
 
+    // Merge and intersection
     std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
     std::vector<Polygon> intersected_obstacles_borders = LineOffsetter::intersect_polygons(offsetted_borders, merged_obstacles);
 
-    // cell decomposition
+    // Convex hull
+    std::vector<Polygon> convex_hull = ConvexHull::create_convex_hull(intersected_obstacles_borders);
+
+    // Cell decomposition
     CellDecomposition cell_decomposition;
     cell_decomposition.add_polygons(offsetted_borders);
-    cell_decomposition.add_polygons(intersected_obstacles_borders);
+    cell_decomposition.add_polygons(convex_hull);
     cell_decomposition.create_cdt();
-    // cell_decomposition.print_triangles();
 
+    // Graph map
     GraphMap graph_map;
     graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
     graph_map.add_gates(gates);
     graph_map.add_robots(x, y);
-    graph_map.optimize(intersected_obstacles_borders);
+    graph_map.optimize(convex_hull);
 
-    Planner escaper_planner("escaper", graph_map);
+    // Planner for escaper
+    Planner escaper_planner("escaper", graph_map, behavioural_complexity);
     escaper_planner.write_problem();
-    escaper_planner.generate_plan();
+    bool escaper_plan_found = escaper_planner.generate_plan();
     std::vector<Point> escaper_path = escaper_planner.extract_path_from_plan();
-    std::vector<int> index_path = escaper_planner.extract_path_indexes_from_plan();
 
-    Planner pursuer_planner("pursuer", graph_map);
-    pursuer_planner.write_problem(index_path);
-    pursuer_planner.generate_plan();
+    // Planner for estimating escaper path
+    Planner escaper_estimated_planner("escaper_estimated", graph_map, behavioural_complexity);
+    escaper_estimated_planner.write_problem();
+    bool escaper_estimated_plan_found = escaper_estimated_planner.generate_plan();
+    std::vector<int> escaper_estimated_path = escaper_estimated_planner.extract_path_indexes_from_plan();
+
+    // Planner for pursuer
+    Planner pursuer_planner("pursuer", graph_map, behavioural_complexity, escaper_estimated_path);
+    pursuer_planner.write_problem();
+    bool pursuer_plan_found = pursuer_planner.generate_plan();
     std::vector<Point> pursuer_path = pursuer_planner.extract_path_from_plan();
 
-    // std::vector<Path> paths;
-    // paths.resize(3);
-
+    // Router for pursuer
     Router pursuer_router;
     pursuer_router.add_path(pursuer_path, theta[0]);
     pursuer_router.elaborate_solution();
     std::vector<Pose> pursuer_solution = pursuer_router.get_path();
     std::cout << "Pursuer solution size: " << pursuer_solution.size() << std::endl;
 
+    // Route for escaper
     Router escaper_router;
     escaper_router.add_path(escaper_path, theta[0]);
     escaper_router.elaborate_solution();
