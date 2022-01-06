@@ -17,7 +17,7 @@ private:
     std::vector<Dubins::Solution> solutions; // solutions of the Dubins paths
     std::vector<DubinsPoint> dubins_points;  // Dubins points
 
-    double k_max = 22;      // maximum curvature
+    double k_max = 20;      // maximum curvature, critical maximum is 22
     int n_angle_steps = 32; // number of angles for the discretization of the angle
     int iterations = 2;     // iterations of the Dubins algorithm
 
@@ -28,8 +28,9 @@ public:
      * @param path Path to add
      * @param theta_start Initial angle of the robot
      */
-    void add_path(std::vector<Point> &path, float theta_start)
+    void add_path(std::vector<Point> &_path, float theta_start)
     {
+        std::vector<Point> path = optimize_path(_path);
         int path_lenght = path.size();
 
         double angle = 2 * M_PI;
@@ -243,5 +244,39 @@ public:
         {
             solutions[i].c.show_dcurve(img, index);
         }
+    }
+
+private:
+    std::vector<Point> optimize_path(std::vector<Point> &path)
+    {
+        std::vector<Point> optimized_path;
+        
+        // push the first point of the path
+        optimized_path.push_back(path[0]);
+
+        float distance = 0.0;
+
+        // for each element in the path to optimize
+        for (int i = 1; i < path.size(); i++)
+        {   
+            // iteratively increase the distance between the current and the previous point
+            distance += distance_btw_points(path[i - 1], path[i]);
+
+            // if the distance is above a threshold
+            if (distance >= 0.1)
+            {
+                // add the current point to the path, so discard the other point that would be close to it
+                optimized_path.push_back(path[i]);
+                distance = 0.0;
+            }
+        }
+
+        return optimized_path;
+    }
+
+    float distance_btw_points(Point p1, Point p2)
+    {
+        // euclidean distance between two points
+        return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
     }
 };
