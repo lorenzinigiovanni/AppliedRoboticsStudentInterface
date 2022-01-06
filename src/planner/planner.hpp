@@ -209,6 +209,11 @@ public:
         }
     }
 
+    int get_cost()
+    {
+        return cost;
+    }
+
 protected:
     // object definitions
 

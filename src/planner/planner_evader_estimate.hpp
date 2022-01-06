@@ -43,6 +43,7 @@ protected:
                 PlannerDistance distance_planner(graph_map, gates[i], 2);
                 distance_planner.write_problem();
                 distance_planner.generate_plan();
+                distance_planner.extract_path_indexes_from_plan();
                 evader_distances[gates[i]] = distance_planner.get_cost();
             }
 
@@ -61,14 +62,16 @@ protected:
                 file.close();
             }
 
-            std::fstream file;
-            file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+            std::ofstream out_file;
+            out_file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::fstream::out | std::fstream::app);
 
             for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
             {
-                file << it->second << "\t";
+                out_file << it->second << "\t";
             }
-            file << std::endl;
+            out_file << std::endl;
+
+            out_file.close();
 
             std::map<std::string, std::vector<int>> gates_map;
             std::vector<std::string> gates_str;
@@ -76,7 +79,10 @@ protected:
             int count = 0;
             std::string line;
 
-            while (std::getline(file, line))
+            std::ifstream in_file;
+            in_file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::fstream::in);
+
+            while (std::getline(in_file, line))
             {
                 if (count == 0)
                 {
@@ -92,14 +98,14 @@ protected:
                     std::vector<std::string> str = split_string(line, "\t");
                     for (int i = 0; i < str.size(); i++)
                     {
-                        gates_map[gates_str[i]].push_back(std::stoi(str[i]));
+                        gates_map[gates_str[i]].push_back(std::atoi(str[i].c_str()));
                     }
                 }
 
                 count++;
             }
 
-            file.close();
+            in_file.close();
 
             // if we do not have enought data use behaviour complexity 1
             if (count <= 2)
@@ -108,7 +114,7 @@ protected:
                 break;
             }
 
-            int lenght_difference = 0;
+            int lenght_difference = -10000;
             int index = 0;
             for (int i = 0; i < gates_str.size(); i++)
             {
@@ -134,7 +140,7 @@ protected:
         }
         }
     }
-    
+
     int virtual get_robot_location()
     {
         return graph_map.get_evader_index();

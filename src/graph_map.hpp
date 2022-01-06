@@ -185,7 +185,7 @@ public:
             for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
             {
                 // Search for a waypoint or gate that is near the robot
-                if (graph[*v].type == WAYPOINT || graph[*v].type == GATE)
+                if (graph[*v].type == WAYPOINT)
                 {
                     // Keep the one that is the closest
                     float distance = distance_btw_points(*v, robot_center);

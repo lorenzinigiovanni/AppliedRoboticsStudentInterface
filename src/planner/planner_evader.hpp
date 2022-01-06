@@ -81,6 +81,7 @@ protected:
                 PlannerDistance distance_planner(graph_map, gates[i], 1);
                 distance_planner.write_problem();
                 distance_planner.generate_plan();
+                distance_planner.extract_path_indexes_from_plan();
                 pursuer_distances[gates[i]] = distance_planner.get_cost();
             }
 
@@ -90,6 +91,7 @@ protected:
                 PlannerDistance distance_planner(graph_map, gates[i], 2);
                 distance_planner.write_problem();
                 distance_planner.generate_plan();
+                distance_planner.extract_path_indexes_from_plan();
                 evader_distances[gates[i]] = distance_planner.get_cost();
             }
 

@@ -18,11 +18,6 @@ public:
     {
     }
 
-    int get_cost()
-    {
-        return cost;
-    }
-
 protected:
     void initialize_objects(std::ofstream &problem)
     {
