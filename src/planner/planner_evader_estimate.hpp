@@ -47,11 +47,11 @@ protected:
                 evader_distances[gates[i]] = distance_planner.get_cost();
             }
 
-            std::fstream test_file("/home/ubuntu/workspace/project/state/evader_estimated_info.txt");
+            std::fstream test_file("/home/ubuntu/workspace/state/evader_estimated_info.txt");
             if (!test_file.good())
             {
                 std::ofstream file;
-                file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::ofstream::out);
+                file.open("/home/ubuntu/workspace/state/evader_estimated_info.txt", std::ofstream::out);
 
                 for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
                 {
@@ -63,7 +63,7 @@ protected:
             }
 
             std::ofstream out_file;
-            out_file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::fstream::out | std::fstream::app);
+            out_file.open("/home/ubuntu/workspace/state/evader_estimated_info.txt", std::fstream::out | std::fstream::app);
 
             for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
             {
@@ -80,7 +80,7 @@ protected:
             std::string line;
 
             std::ifstream in_file;
-            in_file.open("/home/ubuntu/workspace/project/state/evader_estimated_info.txt", std::fstream::in);
+            in_file.open("/home/ubuntu/workspace/state/evader_estimated_info.txt", std::fstream::in);
 
             while (std::getline(in_file, line))
             {

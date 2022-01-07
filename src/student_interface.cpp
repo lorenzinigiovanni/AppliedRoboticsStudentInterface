@@ -11,6 +11,10 @@
 #include "router.hpp"
 #include "convex_hull.hpp"
 
+#include <iostream>
+#include <experimental/filesystem>
+
+#include <algorithm>
 #include <stdexcept>
 #include <sstream>
 #include <chrono>
@@ -124,31 +128,31 @@ namespace student
 
         if (evader_estimated_plan_found)
         {
-        // Planner for pursuer
+            // Planner for pursuer
             pursuer_planner = new PlannerPursuer(graph_map, behavioural_complexity, evader_estimated_path);
             pursuer_planner->write_problem();
             bool pursuer_plan_found = pursuer_planner->generate_plan();
             std::vector<Point> pursuer_path = pursuer_planner->extract_path_from_plan();
 
             if (pursuer_plan_found)
-        {
-        // Router for pursuer
+            {
+                // Router for pursuer
                 pursuer_router = new Router();
                 pursuer_router->add_path(pursuer_path, theta[0]);
                 pursuer_router->elaborate_solution();
                 std::vector<Pose> pursuer_solution = pursuer_router->get_path(1);
-        paths[0].points = pursuer_solution;
+                paths[0].points = pursuer_solution;
             }
         }
 
         if (evader_plan_found)
         {
-        // Route for evader
+            // Route for evader
             evader_router = new Router();
             evader_router->add_path(evader_path, theta[1]);
             evader_router->elaborate_solution();
             std::vector<Pose> evader_solution = evader_router->get_path(1);
-        paths[1].points = evader_solution;
+            paths[1].points = evader_solution;
         }
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -184,8 +188,21 @@ namespace student
                 evader_router->show_path(img, 1);
             }
 
-            cv::imshow("Image", img);
-            cv::waitKey(0);
+            // cv::imshow("Image", img);
+            // cv::waitKey(1);
+
+            std::experimental::filesystem::path photo_path("/home/ubuntu/workspace/images");
+
+            int last_image = 0;
+            for (const auto &file : std::experimental::filesystem::directory_iterator(photo_path))
+            {
+                if (!std::experimental::filesystem::is_empty(file))
+                {
+                    last_image++;
+                }
+            }
+
+            cv::imwrite("/home/ubuntu/workspace/images/image-" + std::to_string(last_image + 1) + ".png", img);
         }
 
         // Deletes

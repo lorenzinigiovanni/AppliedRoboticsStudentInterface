@@ -37,14 +37,14 @@ protected:
 
             std::string choosen_gate_location = "";
 
-            std::fstream test_file("/home/ubuntu/workspace/project/state/evader_info.txt");
+            std::fstream test_file("/home/ubuntu/workspace/state/evader_info.txt");
             if (!test_file.good())
             {
                 // decide gate toward which the evader will head
                 choosen_gate_location = get_random_gate();
 
                 std::ofstream file;
-                file.open("/home/ubuntu/workspace/project/state/evader_info.txt", std::ofstream::out);
+                file.open("/home/ubuntu/workspace/state/evader_info.txt", std::ofstream::out);
                 file << choosen_gate_location << std::endl;
                 file.close();
             }
@@ -52,7 +52,7 @@ protected:
             {
                 // read from file the decided gate toward which the evader is headed
                 std::ifstream file;
-                file.open("/home/ubuntu/workspace/project/state/evader_info.txt", std::ifstream::in);
+                file.open("/home/ubuntu/workspace/state/evader_info.txt", std::ifstream::in);
 
                 std::string line;
                 std::getline(file, line);

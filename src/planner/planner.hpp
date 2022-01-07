@@ -156,7 +156,7 @@ public:
                 {
                     size_t robot = std::stoi(data[i][2].substr(1));
                     size_t start = std::stoi(data[i][3].substr(1));
-                    size_t finish = std::stoi(data[i][4].substr(1).substr(0, data[i][4].find(")") - 1));
+                    size_t finish = std::stoi(data[i][4].substr(1));
 
                     if (path_indexes.size() == 0)
                     {
