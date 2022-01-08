@@ -331,11 +331,11 @@ public:
             else if (graph[*v].type == EVADER)
             {
                 // The evader is yellow colored
-                color = cv::Scalar(0, 200, 255);
+                color = cv::Scalar(0, 150, 255);
             }
 
             // Put a text representing the vertex index near each vertex
-            cv::putText(img, std::to_string(*v), cv::Point(x - 10, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 255), 2);
+            // cv::putText(img, std::to_string(*v), cv::Point(x - 10, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 255), 2);
 
             // Draw a circle representing the vertex
             cv::circle(img, cv::Point(x, y), 5, color, cv::FILLED);

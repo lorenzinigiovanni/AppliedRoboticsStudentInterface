@@ -103,7 +103,7 @@ public:
             color = cv::Scalar(255, 83, 27);
             break;
         case 1: // evader
-            color = cv::Scalar(0, 200, 255);
+            color = cv::Scalar(0, 150, 255);
             break;
         }
 

@@ -262,7 +262,7 @@ public:
         if (problem_name == "evader")
         {
             // The evader plan is light yellow colored
-            color = cv::Scalar(124, 226, 255);
+            color = cv::Scalar(120, 200, 255);
         }
         else if (problem_name == "pursuer")
         {
