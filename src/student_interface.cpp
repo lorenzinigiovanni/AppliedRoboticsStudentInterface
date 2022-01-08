@@ -218,10 +218,10 @@ namespace student
         bool debug_img = true;
         if (debug_img)
         {
-            unsigned int size_x = 1000;
-            unsigned int size_y = 800;
+            unsigned int size_x = 900;
+            unsigned int size_y = 650;
 
-            cv::Mat img = cv::Mat(size_y, size_x, CV_8UC3);
+            cv::Mat img = cv::Mat::zeros(size_y, size_x, CV_8UC3);
 
             cell_decomposition.show_triangles(img);
 
