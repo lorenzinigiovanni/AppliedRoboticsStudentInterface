@@ -124,19 +124,17 @@ public:
         std::vector<Pose> pose_vect;
 
         // prepare parameter to get samples of the Dubins Arc with n points
-        double delta = L / 100.0;
-
-        pose_vect.push_back(Pose(delta, i.x, i.y, i.t, k));
+        double delta = L / 10.0;
 
         // get vector of pose from a Dubins Arc
         DubinsPoint pi = i;
         for (double l = 0.0; l < L; l += delta)
         {
+            // Calculate the new point at distance delta
             pi = circLine(delta, pi, k);
-            pose_vect.push_back(Pose(delta, pi.x, pi.y, pi.t, k)); // Pose(s, x, y, t, k) s = pathlength, k = curvature
+            // Create a Pose(s, x, y, t, k) s = pathlength, x = x coordinate, y = y coordinate, theta = angle, kappa = curvature
+            pose_vect.push_back(Pose(delta, pi.x, pi.y, pi.t, k));
         }
-
-        // pose_vect.push_back(Pose(L, i.x, i.y, i.t, k));
 
         return pose_vect;
     }
