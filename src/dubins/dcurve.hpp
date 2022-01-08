@@ -17,8 +17,8 @@
 class DubinsCurve
 {
 public:
-    DubinsArc *a1, *a2, *a3; // three arc of a curve
-    double L;                // lenght of the curve
+    DubinsArc a1, a2, a3; // three arc of a curve
+    double L;             // lenght of the curve
 
     /**
      * @brief Construct a new Dubins Curve object
@@ -31,15 +31,15 @@ public:
      * @param k2 Curvature of the second arc
      * @param k3 Curvature of the third arc
      */
-    DubinsCurve(DubinsPoint *d1, double s1, double s2, double s3, double k1, double k2, double k3)
+    DubinsCurve(DubinsPoint d1, double s1, double s2, double s3, double k1, double k2, double k3)
     {
         // a Dubins Curve is composed of three Dubins Arc
-        a1 = new DubinsArc(d1, k1, s1);
-        a2 = new DubinsArc(a1->f, k2, s2);
-        a3 = new DubinsArc(a2->f, k3, s3);
+        a1 = DubinsArc(d1, k1, s1);
+        a2 = DubinsArc(a1.f, k2, s2);
+        a3 = DubinsArc(a2.f, k3, s3);
 
         // the lenght of the curve is the sum of the lenght of the three arcs
-        L = a1->L + a2->L + a3->L;
+        L = a1.L + a2.L + a3.L;
     }
 
     /**
@@ -56,9 +56,9 @@ public:
         // a3->show_darc(img, 2);
 
         // color depends on robot
-        a1->show_darc(img, color_index);
-        a2->show_darc(img, color_index);
-        a3->show_darc(img, color_index);
+        a1.show_darc(img, color_index);
+        a2.show_darc(img, color_index);
+        a3.show_darc(img, color_index);
     }
 
     /**
@@ -69,19 +69,18 @@ public:
     std::vector<Pose> to_pose_vect()
     {
         std::vector<Pose> path; // path composed of the three arcs
-        std::vector<Pose> arc;  // one arc
 
         // convert arc1 to pose vector and add to path
-        arc = a1->to_pose_vect();
-        path.insert(path.end(), std::make_move_iterator(arc.begin()), std::make_move_iterator(arc.end()));
+        std::vector<Pose> arc1 = a1.to_pose_vect();
+        path.insert(path.end(), std::make_move_iterator(arc1.begin()), std::make_move_iterator(arc1.end()));
 
         // convert arc2 to pose vector and add to path
-        arc = a2->to_pose_vect();
-        path.insert(path.end(), std::make_move_iterator(arc.begin()), std::make_move_iterator(arc.end()));
+        std::vector<Pose> arc2 = a2.to_pose_vect();
+        path.insert(path.end(), std::make_move_iterator(arc2.begin()), std::make_move_iterator(arc2.end()));
 
         // convert arc3 to pose vector and add to path
-        arc = a3->to_pose_vect();
-        path.insert(path.end(), std::make_move_iterator(arc.begin()), std::make_move_iterator(arc.end()));
+        std::vector<Pose> arc3 = a3.to_pose_vect();
+        path.insert(path.end(), std::make_move_iterator(arc3.begin()), std::make_move_iterator(arc3.end()));
 
         return path;
     }

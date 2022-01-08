@@ -17,10 +17,22 @@
 class DubinsArc
 {
 public:
-    DubinsPoint *i; // starting point
-    DubinsPoint *f; // ending point
-    double k;  // curvature
-    double L;  // lenght
+    DubinsPoint i; // starting point
+    DubinsPoint f; // ending point
+    double k;      // curvature
+    double L;      // lenght
+
+    /**
+     * @brief Construct a new Dubins Arc object
+     *
+     */
+    DubinsArc()
+    {
+        i = DubinsPoint();
+        f = DubinsPoint();
+        k = 0;
+        L = 0;
+    }
 
     /**
      * @brief Construct a new Dubins Arc object
@@ -29,7 +41,7 @@ public:
      * @param _k The curvature
      * @param _L The lenght
      */
-    DubinsArc(DubinsPoint *_i, double _k, double _L) : i(_i), k(_k), L(_L)
+    DubinsArc(DubinsPoint &_i, double _k, double _L) : i(_i), k(_k), L(_L)
     {
         // compute ending point given starting point, curvature and lenght
         f = circLine(_L, _i, _k);
@@ -43,12 +55,12 @@ public:
      * @param k The curvature
      * @return The ending point of the arc
      */
-    DubinsPoint *circLine(double s, DubinsPoint *p, double k)
+    DubinsPoint circLine(double s, DubinsPoint &p, double k)
     {
-        double x = p->x + s * DubinsUtils::sinc(k * s / 2.0) * cos(p->t + k * s / 2);
-        double y = p->y + s * DubinsUtils::sinc(k * s / 2.0) * sin(p->t + k * s / 2);
-        double theta = DubinsUtils::mod2pi(p->t + k * s);
-        return new DubinsPoint(x, y, theta);
+        double x = p.x + s * DubinsUtils::sinc(k * s / 2.0) * cos(p.t + k * s / 2);
+        double y = p.y + s * DubinsUtils::sinc(k * s / 2.0) * sin(p.t + k * s / 2);
+        double theta = DubinsUtils::mod2pi(p.t + k * s);
+        return DubinsPoint(x, y, theta);
     }
 
     /**
@@ -66,8 +78,8 @@ public:
         for (int index = 0; index < n_points; index++)
         {
             double s = L / n_points * index;
-            DubinsPoint *d = circLine(s, i, k);
-            contours.push_back(cv::Point(int(d->x * 500 + 50), img.size().height - int(d->y * 500 + 50)));
+            DubinsPoint d = circLine(s, i, k);
+            contours.push_back(cv::Point(int(d.x * 500 + 50), img.size().height - int(d.y * 500 + 50)));
         }
 
         cv::Scalar color;
@@ -114,15 +126,17 @@ public:
         // prepare parameter to get samples of the Dubins Arc with n points
         double delta = L / 100.0;
 
-        pose_vect.push_back(Pose(delta, i->x, i->y, i->t, k));
+        pose_vect.push_back(Pose(delta, i.x, i.y, i.t, k));
 
         // get vector of pose from a Dubins Arc
-        DubinsPoint *pi = i;
+        DubinsPoint pi = i;
         for (double l = 0.0; l < L; l += delta)
         {
             pi = circLine(delta, pi, k);
-            pose_vect.push_back(Pose(delta, pi->x, pi->y, pi->t, k)); // Pose(s, x, y, t, k) s = pathlength, k = curvature
+            pose_vect.push_back(Pose(delta, pi.x, pi.y, pi.t, k)); // Pose(s, x, y, t, k) s = pathlength, k = curvature
         }
+
+        // pose_vect.push_back(Pose(L, i.x, i.y, i.t, k));
 
         return pose_vect;
     }
@@ -132,12 +146,12 @@ public:
 
 /**
  * @brief Print Dubins Arc in console
- * 
- * @param os 
- * @param a 
- * @return std::ostream& 
+ *
+ * @param os
+ * @param a
+ * @return std::ostream&
  */
 std::ostream &operator<<(std::ostream &os, const DubinsArc &a)
 {
-    return os << setprecision(2) << "[" << *(a.i) << " " << *(a.f) << " k: " << a.k << " L: " << a.L << "]";
+    return os << setprecision(2) << "[" << a.i << " " << a.f << " k: " << a.k << " L: " << a.L << "]";
 }

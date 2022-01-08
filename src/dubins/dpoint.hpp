@@ -16,6 +16,17 @@ public:
     /**
      * @brief Construct a new Dubins Point object
      *
+     */
+    DubinsPoint()
+    {
+        x = 0;
+        y = 0;
+        t = 0;
+    };
+
+    /**
+     * @brief Construct a new Dubins Point object
+     *
      * @param _x The x coordinate
      * @param _y The y coordinate
      * @param _t The angle of the robot
@@ -35,10 +46,10 @@ public:
 
 /**
  * @brief Print Dubins Point in console
- * 
- * @param os 
- * @param a 
- * @return std::ostream& 
+ *
+ * @param os
+ * @param a
+ * @return std::ostream&
  */
 std::ostream &operator<<(std::ostream &os, const DubinsPoint &_p)
 {

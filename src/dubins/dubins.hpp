@@ -44,10 +44,10 @@ public:
      */
     struct StandardForm
     {
-        double th0;  // initial angle
-        double thf;  // final angle
-        double k_max; // maximum curvature
-        double lambda;  // distance between the initial and final points
+        double th0;    // initial angle
+        double thf;    // final angle
+        double k_max;  // maximum curvature
+        double lambda; // distance between the initial and final points
 
         /**
          * @brief Construct a new Dubins Standard Form object
@@ -110,9 +110,9 @@ public:
     {
         StandardForm input_problem = scaleToStandard(pi, pf, k_max);
 
-        int pidx = -1;                                         // initialize solution type to a null solution
-        double best_lenght = std::numeric_limits<double>::max();         // initialize best_lenght to infinite
-        StandardForm best_solution = StandardForm(0, 0, 0, 0); // use this to store the best solution
+        int pidx = -1;                                           // initialize solution type to a null solution
+        double best_lenght = std::numeric_limits<double>::max(); // initialize best_lenght to infinite
+        StandardForm best_solution = StandardForm(0, 0, 0, 0);   // use this to store the best solution
 
         // try al six possibile Dubins solutions and keep the one with the shortes lenght
         for (int i = 0; i < 6; i++)
@@ -148,7 +148,7 @@ public:
             double k3 = k_signs[pidx][2] * k_max;
 
             // create the Dubins solution Curve
-            DubinsCurve curve = DubinsCurve(&pi, nsf.s1, nsf.s2, nsf.s3, k1, k2, k3);
+            DubinsCurve curve = DubinsCurve(pi, nsf.s1, nsf.s2, nsf.s3, k1, k2, k3);
 
             // if no valid solution was found return a null solution
             if (!DubinsUtils::check(
@@ -162,7 +162,7 @@ public:
                     input_problem.thf))
             {
                 cout << "ERROR, dubins.hpp line 106, probably a low precision solution" << endl;
-                return Solution(-1, DubinsCurve(new DubinsPoint(0, 0, 0), 0, 0, 0, 0, 0, 0));
+                return Solution(-1, DubinsCurve(DubinsPoint(0, 0, 0), 0, 0, 0, 0, 0, 0));
             }
 
             // return the solution
@@ -170,7 +170,7 @@ public:
         }
 
         // otherwise return a null solution
-        return Solution(pidx, DubinsCurve(new DubinsPoint(0, 0, 0), 0, 0, 0, 0, 0, 0));
+        return Solution(pidx, DubinsCurve(DubinsPoint(0, 0, 0), 0, 0, 0, 0, 0, 0));
     }
 
     /**
