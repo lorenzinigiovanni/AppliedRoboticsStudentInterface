@@ -71,92 +71,149 @@ namespace student
         throw std::logic_error("STUDENT FUNCTION - FIND ROBOT - NOT IMPLEMENTED");
     }
 
+    /**
+     * @brief Plan a path toward the gate for the evader robot and a path to intercept the evader robot for the pursuer robot
+     *
+     * @param border A polygon representing the border of the map
+     * @param obstacles A vector of polygons representing the obstacles in the map
+     * @param gates A vector of polygons representing the gates in the map
+     * @param x A vector of x coordinates of the robots (0 pursuer, 1 evader)
+     * @param y A vector of y coordinates of the robots (0 pursuer, 1 evader)
+     * @param theta A vector of angles of the robots (0 pursuer, 1 evader)
+     * @param paths A list of paths to be filled by the function (0 pursuer, 1 evader)
+     * @param config_folder
+     * @return true if the function succeeded in planning the paths
+     * @return false if the function failed to plan the paths
+     */
     bool planPath(const Polygon &border, const std::vector<Polygon> &obstacles, const std::vector<Polygon> &gates,
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &paths, const std::string &config_folder)
     {
+        // Set the behavioural complexity of the robots (1, 2, 3)
         int behavioural_complexity = 3;
 
+        // Lenght of the path that the robot will do in a step (-1 for infinite)
+        int path_length = 1;
+
+        // Take the current time at the start of the planning function
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-        // Offsetting
+        // // Graph Generation // //
+
+        // Offset the borders by the max dimension of the robot (95mm)
         std::vector<Polygon> borders;
         borders.push_back(border);
         std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -95);
-        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 95); // 95
 
-        // Merge and intersection
+        // Offset the obstacles by the max dimension of the robot (95mm)
+        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 95);
+
+        // Merge the overlapping inflated obstacles in a single obstacle
         std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
+        // Intersect the obstacles with the borders of the map to prevent them to being outside the borders
         std::vector<Polygon> intersected_obstacles_borders = LineOffsetter::intersect_polygons(offsetted_borders, merged_obstacles);
+        // Apply the convex hull algorithm to the obstacles
+        std::vector<Polygon> obstacles_convex_hull = ConvexHull::create_convex_hull(intersected_obstacles_borders);
 
-        // Convex hull
-        std::vector<Polygon> convex_hull = ConvexHull::create_convex_hull(intersected_obstacles_borders);
-
-        // Cell decomposition
+        // Create an object for doing the cell decomposition operation
         CellDecomposition cell_decomposition;
+        // Add the borders and the obstacles to the cell decomposition object
         cell_decomposition.add_polygons(offsetted_borders);
-        cell_decomposition.add_polygons(convex_hull);
+        cell_decomposition.add_polygons(obstacles_convex_hull);
+        // Do the triangular cell decomposition
         cell_decomposition.create_cdt();
 
-        // Graph map
+        // Create a graph map object
         GraphMap graph_map;
+        // Initialize the graph map object with the triangles of the cell decomposition
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
+        // Add the gates to the graph
         graph_map.add_gates(gates);
+        // Add the robots to the graph
         graph_map.add_robots(x, y);
-        graph_map.optimize(convex_hull);
+        // Apply some optimizations to the graph
+        graph_map.optimize(obstacles_convex_hull);
 
-        // Routers
-        Router *pursuer_router;
-        Router *evader_router;
+        // // Path Planning // //
 
         // Planners
         PlannerEvader *evader_planner;
         PlannerEvaderEstimate *evader_estimated_planner;
         PlannerPursuer *pursuer_planner;
 
-        // Planner for evader
+        // Planner for planning the evader path
         evader_planner = new PlannerEvader(graph_map, behavioural_complexity);
+        // Create a PDDL file containing the problem to be solved
         evader_planner->write_problem();
+        // Call the planner to generate the plan
         bool evader_plan_found = evader_planner->generate_plan();
+        // Get the path from the planner
         std::vector<Point> evader_path = evader_planner->extract_path_from_plan();
 
-        // Planner for estimating evader path
+        // Planner for estimating evader path, used by the pursuer
         evader_estimated_planner = new PlannerEvaderEstimate(graph_map, behavioural_complexity);
+        // Create a PDDL file containing the problem to be solved
         evader_estimated_planner->write_problem();
+        // Call the planner to generate the plan
         bool evader_estimated_plan_found = evader_estimated_planner->generate_plan();
+        // Get the path from the planner
         std::vector<int> evader_estimated_path = evader_estimated_planner->extract_path_indexes_from_plan();
 
+        // Results of the pursuer planner
+        bool pursuer_plan_found = false;
+        std::vector<Point> pursuer_path;
+
+        // The pursuer planner can only run if a estimated plan for the evader is found
         if (evader_estimated_plan_found)
         {
-            // Planner for pursuer
+            // Planner for planning the pursuer path
             pursuer_planner = new PlannerPursuer(graph_map, behavioural_complexity, evader_estimated_path);
+            // Create a PDDL file containing the problem to be solved
             pursuer_planner->write_problem();
-            bool pursuer_plan_found = pursuer_planner->generate_plan();
-            std::vector<Point> pursuer_path = pursuer_planner->extract_path_from_plan();
-
-            if (pursuer_plan_found)
-            {
-                // Router for pursuer
-                pursuer_router = new Router();
-                pursuer_router->add_path(pursuer_path, theta[0]);
-                pursuer_router->elaborate_solution();
-                std::vector<Pose> pursuer_solution = pursuer_router->get_path(1);
-                paths[0].points = pursuer_solution;
-            }
+            // Call the planner to generate the plan
+            pursuer_plan_found = pursuer_planner->generate_plan();
+            // Get the path from the planner
+            pursuer_path = pursuer_planner->extract_path_from_plan();
         }
 
+        // // Path Computation // //
+
+        // Routers
+        Router *evader_router;
+        Router *pursuer_router;
+
+        // Run the Dubins algorthm only if a evader plan has been found
         if (evader_plan_found)
         {
-            // Route for evader
+            // Router for evader
             evader_router = new Router();
+            // Set the found plan in the evader router along with its starting angle
             evader_router->add_path(evader_path, theta[1]);
+            // Compute the evader path
             evader_router->elaborate_solution();
-            std::vector<Pose> evader_solution = evader_router->get_path(1);
-            paths[1].points = evader_solution;
+            // Extract the evader path and put it in the second position of the paths vector
+            paths[1].points = evader_router->get_path(path_length);
         }
 
+        // Run the Dubins algorthm only if a pursuer plan has been found
+        if (pursuer_plan_found)
+        {
+            // Router for pursuer
+            pursuer_router = new Router();
+            // Set the found plan in the puruser router along with its starting angle
+            pursuer_router->add_path(pursuer_path, theta[0]);
+            // Compute the pursuer path
+            pursuer_router->elaborate_solution();
+            // Extract the pursuer path and put it in the first position of the paths vector
+            paths[0].points = pursuer_router->get_path(path_length);
+        }
+
+        // Take the current time at the end of the planning function
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        //  Print the time taken to execute the function to the console
         std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000 << "[ms]" << std::endl;
+
+        // // Debug Images // //
 
         bool debug_img = true;
         if (debug_img)
@@ -188,20 +245,17 @@ namespace student
                 evader_router->show_path(img, 1);
             }
 
+            // Show images on screen
             // cv::imshow("Image", img);
             // cv::waitKey(1);
 
+            // Save images to file
             std::experimental::filesystem::path photo_path("/home/ubuntu/workspace/images");
-
             int last_image = 0;
             for (const auto &file : std::experimental::filesystem::directory_iterator(photo_path))
             {
-                if (!std::experimental::filesystem::is_empty(file))
-                {
-                    last_image++;
-                }
+                last_image++;
             }
-
             cv::imwrite("/home/ubuntu/workspace/images/image-" + std::to_string(last_image + 1) + ".png", img);
         }
 
