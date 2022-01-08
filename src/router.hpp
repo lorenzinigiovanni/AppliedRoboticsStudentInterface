@@ -208,12 +208,12 @@ public:
      * @param Number of steps to get the path (-1 for all)
      * @return A vector of Pose that represent the computed Dubins Path
      */
-    std::vector<Pose> get_path(int steps = 1000000000)
+    std::vector<Pose> get_path(int steps)
     {
         std::vector<Pose> path;
 
         // the steps should be smaller than the solution size
-        if (steps > solutions.size())
+        if (steps > solutions.size() || steps == -1)
         {
             steps = solutions.size();
         }
