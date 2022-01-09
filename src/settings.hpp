@@ -17,11 +17,11 @@ public:
     // Offset that is applied to polygon (95mm)
     static const int offset = 95;
 
-    // maximum curvature, critical maximum is 22
+    // Maximum curvature, critical maximum is 22
     static constexpr double k_max = 20;
 
+    // Absolute path to the workspace folder
     static std::string workspace_path;
-    // static const std::string workspace_path = std::string("/home/ubuntu/workspace/");
 };
 
 std::string Settings::workspace_path = "/home/ubuntu/workspace/";
