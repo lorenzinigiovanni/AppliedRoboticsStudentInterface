@@ -192,15 +192,6 @@ $ cp ff ~/workspace/project/src/pddl
 
 # Preparation
 
-Compile:
-
-```shell
-$ cd ~/workspace/project/build
-$ cmake ..
-$ make
-$ source ../environment.sh
-```
-
 Create a directory to store debug images (clean the content before each run):
 
 ```shell
@@ -213,10 +204,26 @@ Create a directory to store the robots status (clean the content before each run
 $ mkdir ~/workspace/state
 ```
 
-In the file student_interface.cpp, select the behavioral complexity of the robot, by setting a value between 1 and 3 at line 93:
+In the file `settings.hpp`, it is possible to set the following parameters:
+
+- Behavioral complexity of the robot, value between 1 and 3;
+- If to save plan image in `workspace/images/` folder;
+- Length of path the robot takes for a step;
+- Offset value to be applied to borders and obstacles;
+- Curvature parameter for the robot;
+- The absolute path of the workspace folder used for the project.
 
 ```shell
-$ nano ~/workspace/project/src/student_interface.cpp
+$ nano ~/workspace/project/src/settings.hpp
+```
+
+Compile:
+
+```shell
+$ cd ~/workspace/project/build
+$ cmake ..
+$ make
+$ source ../environment.sh
 ```
 
 # Execution

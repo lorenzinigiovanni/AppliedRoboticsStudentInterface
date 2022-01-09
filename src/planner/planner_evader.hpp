@@ -63,7 +63,7 @@ protected:
 
             std::string choosen_gate_location = "";
 
-            std::fstream test_file("/home/ubuntu/workspace/state/evader_info.txt");
+            std::fstream test_file(Settings::workspace_path + "state/evader_info.txt");
 
             // If the file with the choosen gate does not exist, create it and choose a random gate
             if (!test_file.good())
@@ -72,7 +72,7 @@ protected:
                 choosen_gate_location = get_random_gate();
 
                 std::ofstream file;
-                file.open("/home/ubuntu/workspace/state/evader_info.txt", std::ofstream::out);
+                file.open(Settings::workspace_path + "state/evader_info.txt", std::ofstream::out);
                 file << choosen_gate_location << std::endl;
                 file.close();
             }
@@ -81,7 +81,7 @@ protected:
             else
             {
                 std::ifstream file;
-                file.open("/home/ubuntu/workspace/state/evader_info.txt", std::ifstream::in);
+                file.open(Settings::workspace_path + "state/evader_info.txt", std::ifstream::in);
 
                 std::string line;
                 std::getline(file, line);

@@ -4,6 +4,7 @@
 
 #include "dubins/dpoint.hpp"
 #include "dubins/dubins.hpp"
+#include "settings.hpp"
 #include <vector>
 #include <cmath>
 
@@ -17,7 +18,7 @@ private:
     std::vector<Dubins::Solution> solutions; // solutions of the Dubins paths
     std::vector<DubinsPoint> dubins_points;  // Dubins points
 
-    double k_max = 20;      // maximum curvature, critical maximum is 22
+    double k_max = Settings::k_max;      // maximum curvature, critical maximum is 22
     int n_angle_steps = 32; // number of angles for the discretization of the angle
     int iterations = 2;     // iterations of the Dubins algorithm
 

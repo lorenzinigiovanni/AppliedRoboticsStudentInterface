@@ -82,12 +82,12 @@ protected:
             }
 
             // Check if the file storing the distances exists
-            std::fstream test_file("/home/ubuntu/workspace/state/evader_estimated_info.txt");
+            std::fstream test_file(Settings::workspace_path + "state/evader_estimated_info.txt");
             if (!test_file.good())
             {
                 // If it doesn't exist create it
                 std::ofstream file;
-                file.open("/home/ubuntu/workspace/state/evader_estimated_info.txt", std::ofstream::out);
+                file.open(Settings::workspace_path + "state/evader_estimated_info.txt", std::ofstream::out);
 
                 // Create an header with the gates names
                 for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
@@ -101,7 +101,7 @@ protected:
 
             // Open the distances file to store the distances
             std::ofstream out_file;
-            out_file.open("/home/ubuntu/workspace/state/evader_estimated_info.txt", std::fstream::out | std::fstream::app);
+            out_file.open(Settings::workspace_path + "state/evader_estimated_info.txt", std::fstream::out | std::fstream::app);
 
             // Store the distances between each gate and the robot in the file
             for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
@@ -123,7 +123,7 @@ protected:
 
             // Open the distances files to read the distances
             std::ifstream in_file;
-            in_file.open("/home/ubuntu/workspace/state/evader_estimated_info.txt", std::fstream::in);
+            in_file.open(Settings::workspace_path + "state/evader_estimated_info.txt", std::fstream::in);
 
             // For every line in the file
             while (std::getline(in_file, line))

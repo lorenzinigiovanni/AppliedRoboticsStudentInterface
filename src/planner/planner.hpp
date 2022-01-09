@@ -2,6 +2,7 @@
 
 #include "../graph_map.hpp"
 #include "../boost/graph/adjacency_list.hpp"
+#include "../settings.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -57,7 +58,7 @@ public:
         std::ofstream problem;
 
         // Write the problem file as problemname.problem.pddl
-        problem.open("/home/ubuntu/workspace/project/src/pddl/" + problem_name + ".problem.pddl", std::ofstream::out | std::ofstream::trunc);
+        problem.open(Settings::workspace_path + "project/src/pddl/" + problem_name + ".problem.pddl", std::ofstream::out | std::ofstream::trunc);
 
         // Initialize the problem file by defining the problem name and the domain name
         problem << "(define (problem " + problem_name + "-prob)" << std::endl;
@@ -101,10 +102,10 @@ public:
         // -o domain file
         // -f problem file
         // -s the type of search
-        // -w the weight
-        std::string command = "cd /home/ubuntu/workspace/project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 3 -w 1";
+        // -w the weight"
+        std::string command = "cd " + Settings::workspace_path + "project/src/pddl/ \n ./ff -o domain.pddl -f " + problem_name + ".problem.pddl -s 3 -w 1";
 
-        // Executo the command and read the console output of it's execution
+        // Execute the command and read the console output of it's execution
         std::string solution = exec(command.c_str());
 
         // If the planner failed to found a plan, return false

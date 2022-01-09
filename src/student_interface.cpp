@@ -10,6 +10,7 @@
 #include "dubins/dubins.hpp"
 #include "router.hpp"
 #include "convex_hull.hpp"
+#include "settings.hpp"
 
 #include <iostream>
 #include <experimental/filesystem>
@@ -89,24 +90,18 @@ namespace student
                   const std::vector<float> x, const std::vector<float> y, const std::vector<float> theta,
                   std::vector<Path> &paths, const std::string &config_folder)
     {
-        // Set the behavioural complexity of the robots (1, 2, 3)
-        int behavioural_complexity = 3;
-
-        // Lenght of the path that the robot will do in a step (-1 for infinite)
-        int path_length = 1;
-
         // Take the current time at the start of the planning function
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
         // // Graph Generation // //
 
-        // Offset the borders by the max dimension of the robot (95mm)
+        // Offset the borders by the max dimension of the robot
         std::vector<Polygon> borders;
         borders.push_back(border);
-        std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -95);
+        std::vector<Polygon> offsetted_borders = LineOffsetter::offset_polygons(borders, -Settings::offset);
 
-        // Offset the obstacles by the max dimension of the robot (95mm)
-        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, 95);
+        // Offset the obstacles by the max dimension of the robot
+        std::vector<Polygon> offsetted_obstacles = LineOffsetter::offset_polygons(obstacles, Settings::offset);
 
         // Merge the overlapping inflated obstacles in a single obstacle
         std::vector<Polygon> merged_obstacles = LineOffsetter::merge_polygons(offsetted_obstacles);
@@ -142,7 +137,7 @@ namespace student
         PlannerPursuer *pursuer_planner;
 
         // Planner for planning the evader path
-        evader_planner = new PlannerEvader(graph_map, behavioural_complexity);
+        evader_planner = new PlannerEvader(graph_map, Settings::behavioural_complexity);
         // Create a PDDL file containing the problem to be solved
         evader_planner->write_problem();
         // Call the planner to generate the plan
@@ -151,7 +146,7 @@ namespace student
         std::vector<Point> evader_path = evader_planner->extract_path_from_plan();
 
         // Planner for estimating evader path, used by the pursuer
-        evader_estimated_planner = new PlannerEvaderEstimate(graph_map, behavioural_complexity);
+        evader_estimated_planner = new PlannerEvaderEstimate(graph_map, Settings::behavioural_complexity);
         // Create a PDDL file containing the problem to be solved
         evader_estimated_planner->write_problem();
         // Call the planner to generate the plan
@@ -167,7 +162,7 @@ namespace student
         if (evader_estimated_plan_found)
         {
             // Planner for planning the pursuer path
-            pursuer_planner = new PlannerPursuer(graph_map, behavioural_complexity, evader_estimated_path);
+            pursuer_planner = new PlannerPursuer(graph_map, Settings::behavioural_complexity, evader_estimated_path);
             // Create a PDDL file containing the problem to be solved
             pursuer_planner->write_problem();
             // Call the planner to generate the plan
@@ -192,7 +187,7 @@ namespace student
             // Compute the evader path
             evader_router->elaborate_solution();
             // Extract the evader path and put it in the second position of the paths vector
-            paths[1].points = evader_router->get_path(path_length);
+            paths[1].points = evader_router->get_path(Settings::path_length);
         }
 
         // Run the Dubins algorthm only if a pursuer plan has been found
@@ -205,7 +200,7 @@ namespace student
             // Compute the pursuer path
             pursuer_router->elaborate_solution();
             // Extract the pursuer path and put it in the first position of the paths vector
-            paths[0].points = pursuer_router->get_path(path_length);
+            paths[0].points = pursuer_router->get_path(Settings::path_length);
         }
 
         // Take the current time at the end of the planning function
@@ -215,8 +210,7 @@ namespace student
 
         // // Debug Images // //
 
-        bool debug_img = true;
-        if (debug_img)
+        if (Settings::debug_img)
         {
             unsigned int size_x = 900;
             unsigned int size_y = 650;
@@ -250,13 +244,14 @@ namespace student
             // cv::waitKey(1);
 
             // Save images to file
-            std::experimental::filesystem::path photo_path("/home/ubuntu/workspace/images");
+            std::string path = Settings::workspace_path + "images/";
+            std::experimental::filesystem::path photo_path(path);
             int last_image = 0;
             for (const auto &file : std::experimental::filesystem::directory_iterator(photo_path))
             {
                 last_image++;
             }
-            cv::imwrite("/home/ubuntu/workspace/images/image-" + std::to_string(last_image + 1) + ".png", img);
+            cv::imwrite(path + "image-" + std::to_string(last_image + 1) + ".png", img);
         }
 
         // Deletes
