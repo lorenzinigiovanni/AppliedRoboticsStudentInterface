@@ -148,15 +148,14 @@ protected:
                 }
             }
 
-            int L = 100000;
+            double L = 100000;
             int index;
 
             // For each possibile gate
             for (int i = 0; i < distances[0].size(); i++)
             {
                 // Distance between the evader and the gate[i] minus the distance between the pursuer and the gate[i]
-                int tmp = (distances[0][i] - distances[1][i]) / (distances[0][i] + distances[1][i]);
-
+                double tmp = ((double)(distances[0][i] - distances[1][i])) / ((double)(distances[0][i] + distances[1][i]));
                 // If it is the smaller length keep the index of the gate
                 if (tmp < L)
                 {
