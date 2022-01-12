@@ -114,6 +114,13 @@ public:
             std::cout << "FAIL TO FIND A PLAN" << std::endl;
             return false;
         }
+        
+        // If the planner simplified the plan to false, return false
+        if (solution.find("ff: goal can be simplified to FALSE. No plan will solve it") != std::string::npos)
+        {
+            std::cout << "GOAL CAN BE SIMPLIFIED TO FALSE. NO PLAN WILL SOLVE IT" << std::endl;
+            return false;
+        }
 
         // Split the solution in lines
         std::vector<std::string> lines = split_string(solution, "\n");
@@ -186,6 +193,10 @@ public:
         // fail to find a plan
         /*
             weighted A* search space empty! problem proven unsolvable.
+        */
+        // or
+        /*
+            ff: goal can be simplified to FALSE. No plan will solve it
         */
 
         std::cout << "*************" << problem_name << "*************" << std::endl;

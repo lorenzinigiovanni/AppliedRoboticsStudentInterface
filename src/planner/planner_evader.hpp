@@ -107,59 +107,45 @@ protected:
             // Get all gates possible indexes
             std::vector<int> gates = graph_map.get_gates_indexes();
 
-            // Map to store the current distance between the pursuer robot and a gate
-            std::map<int, int> pursuer_distances;
-
-            // For each gate in the graph map
-            for (int i = 0; i < gates.size(); i++)
-            {
-                // Use the PDDL planner to get the distance between the pursuer and the gate
-                PlannerDistance distance_planner(graph_map, gates[i], 1);
-                distance_planner.write_problem();
-                distance_planner.generate_plan();
-                distance_planner.extract_path_indexes_from_plan();
-
-                // Store the distance between the pursuer and the gate
-                pursuer_distances[gates[i]] = distance_planner.get_cost();
-            }
-
-            // Map to store the current distance between the evader robot and a gate
-            std::map<int, int> evader_distances;
+            std::vector<std::vector<int>> distances(2);
+            std::vector<std::string> gates_str;
 
             // For each gate in the graph map
             for (int i = 0; i < gates.size(); i++)
             {
                 // Use the PDDL planner to get the distance between the evader and the gate
-                PlannerDistance distance_planner(graph_map, gates[i], 2);
-                distance_planner.write_problem();
-                distance_planner.generate_plan();
-                distance_planner.extract_path_indexes_from_plan();
+                PlannerDistance distance_evader_planner(graph_map, gates[i], 2);
+                distance_evader_planner.write_problem();
+                bool found_evader_plan = distance_evader_planner.generate_plan();
 
-                // Store the distance between the evader and the gate
-                evader_distances[gates[i]] = distance_planner.get_cost();
-            }
+                // If the evader can find a plan towards this gate
+                if (found_evader_plan)
+                {
+                    // Store the distance between the evader and the gate
+                    distance_evader_planner.extract_path_indexes_from_plan();
+                    distances[0].push_back(distance_evader_planner.get_cost());
 
-            // Matrix
-            std::vector<std::vector<int>> distances(2);
+                    // Save the gate as a possibile destination
+                    gates_str.push_back(std::to_string(gates[i]));
 
-            // Vector to store the gates names
-            std::vector<std::string> gates_str;
+                    // Use the PDDL planner to get the distance between the pursuer and the gate
+                    PlannerDistance distance_pursuer_planner(graph_map, gates[i], 1);
+                    distance_pursuer_planner.write_problem();
+                    bool found_pursuer_plan = distance_pursuer_planner.generate_plan();
 
-            // For each distance between evader and a gate
-            for (std::map<int, int>::const_iterator it = evader_distances.begin(); it != evader_distances.end(); it++)
-            {
-                // Fill the gates names
-                gates_str.push_back(std::to_string(it->first));
-
-                // Set the distance between the evader and the gate
-                distances[0].push_back(it->second);
-            }
-
-            // For each distance between pursuer and a gate
-            for (std::map<int, int>::const_iterator it = pursuer_distances.begin(); it != pursuer_distances.end(); it++)
-            {
-                // Set the distance between the pursuer and the gate
-                distances[1].push_back(it->second);
+                    // If the pursuer can find a plan towards this gate
+                    if (found_pursuer_plan)
+                    {
+                        // Store the distance between the pursuer and the gate
+                        distance_pursuer_planner.extract_path_indexes_from_plan();
+                        distances[1].push_back(distance_pursuer_planner.get_cost());
+                    }
+                    else
+                    {
+                        // Otherwise set the distance to a very high value
+                        distances[1].push_back(100000);
+                    }
+                }
             }
 
             int L = 100000;
