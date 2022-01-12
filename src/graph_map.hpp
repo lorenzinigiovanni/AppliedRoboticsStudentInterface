@@ -215,7 +215,7 @@ public:
             }
 
             // Temporary variables to store the nearest vertex and its distance
-            GraphType::vertex_descriptor near_waypoint;
+            GraphType::vertex_descriptor near_waypoint = -1;
             float tmpDistance = 1000.0;
 
             // Iterate over each vertex of the graph
@@ -256,7 +256,10 @@ public:
             }
 
             // Add an edge between the gate and the nearest waypoint
-            std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(point_to_add, near_waypoint, {tmpDistance}, graph);
+            if (near_waypoint != -1)
+            {
+                std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(point_to_add, near_waypoint, {tmpDistance}, graph);
+            }
         }
     }
 
@@ -444,7 +447,7 @@ public:
             }
 
             // Put a text representing the vertex index near each vertex
-            // cv::putText(img, std::to_string(*v), cv::Point(x - 10, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 255), 2);
+            cv::putText(img, std::to_string(*v), cv::Point(x - 10, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 255), 2);
 
             // Draw a circle representing the vertex
             cv::circle(img, cv::Point(x, y), 5, color, cv::FILLED);
