@@ -98,6 +98,8 @@ public:
      */
     bool generate_plan()
     {
+        std::cout << std::endl << "*************" << problem_name << "*************" << std::endl;
+
         // Command used to call the Metric-FF planner
         // -o domain file
         // -f problem file
@@ -198,8 +200,6 @@ public:
         /*
             ff: goal can be simplified to FALSE. No plan will solve it
         */
-
-        std::cout << "*************" << problem_name << "*************" << std::endl;
 
         std::vector<int> path_indexes;
         cost = 0;
