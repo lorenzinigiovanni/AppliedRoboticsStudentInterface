@@ -49,6 +49,11 @@ protected:
                 // Default to the starting position of the evader robot if there are no other possibilities
                 problem << "(= (evader-cost l" << evader_estimated_path[i] << ") 100000)" << std::endl;
             }
+            else if (i == evader_estimated_path.size() - 1)
+            {
+                // Pursuer goes to the destination of the evader if it cannot reach it before
+                problem << "(= (evader-cost l" << evader_estimated_path[i] << ") 100000)" << std::endl;
+            }
             else
             {
                 // The pursuer should intercet the evader at a future estimated position of the evader before the evader itself
