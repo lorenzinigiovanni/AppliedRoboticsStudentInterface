@@ -15,8 +15,8 @@
 
 /**
  * @brief File used to test our code before using it in the simulator
- * 
- * @return int 
+ *
+ * @return int
  */
 int main()
 {
@@ -68,20 +68,31 @@ int main()
     std::vector<Polygon> intersected_obstacles_borders = LineOffsetter::intersect_polygons(offsetted_borders, merged_obstacles);
 
     // Convex hull
-    std::vector<Polygon> convex_hull = ConvexHull::create_convex_hull(intersected_obstacles_borders);
+    std::vector<Polygon> obstacles_convex_hull = ConvexHull::create_convex_hull(intersected_obstacles_borders);
+
+    // Merge obstacles and ofsetted borders vectors
+    std::vector<Polygon> obstacles_and_borders;
+    for (int i = 0; i < obstacles_convex_hull.size(); i++)
+    {
+        obstacles_and_borders.push_back(obstacles_convex_hull[i]);
+    }
+    for (int i = 0; i < offsetted_borders.size(); i++)
+    {
+        obstacles_and_borders.push_back(offsetted_borders[i]);
+    }
 
     // Cell decomposition
     CellDecomposition cell_decomposition;
     cell_decomposition.add_polygons(offsetted_borders);
-    cell_decomposition.add_polygons(convex_hull);
+    cell_decomposition.add_polygons(obstacles_convex_hull);
     cell_decomposition.create_cdt();
 
     // Graph map
     GraphMap graph_map;
     graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
-    graph_map.add_gates(gates);
+    graph_map.add_gates(gates, obstacles_and_borders, borders);
     graph_map.add_robots(x, y);
-    graph_map.optimize(convex_hull);
+    graph_map.optimize(obstacles_convex_hull);
 
     // Routers
     Router *pursuer_router;

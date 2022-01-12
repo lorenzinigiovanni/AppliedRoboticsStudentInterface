@@ -111,6 +111,17 @@ namespace student
         // Apply the convex hull algorithm to the obstacles
         std::vector<Polygon> obstacles_convex_hull = ConvexHull::create_convex_hull(intersected_obstacles_borders);
 
+        // Merge obstacles and ofsetted borders vectors
+        std::vector<Polygon> obstacles_and_borders;
+        for (int i = 0; i < obstacles_convex_hull.size(); i++)
+        {
+            obstacles_and_borders.push_back(obstacles_convex_hull[i]);
+        }
+        for (int i = 0; i < offsetted_borders.size(); i++)
+        {
+            obstacles_and_borders.push_back(offsetted_borders[i]);
+        }
+
         // Create an object for doing the cell decomposition operation
         CellDecomposition cell_decomposition;
         // Add the borders and the obstacles to the cell decomposition object
@@ -124,11 +135,11 @@ namespace student
         // Initialize the graph map object with the triangles of the cell decomposition
         graph_map.create_graph(cell_decomposition.triangles, cell_decomposition.points);
         // Add the gates to the graph
-        graph_map.add_gates(gates);
+        graph_map.add_gates(gates, obstacles_and_borders, borders);
         // Add the robots to the graph
         graph_map.add_robots(x, y);
         // Apply some optimizations to the graph
-        graph_map.optimize(obstacles_convex_hull);
+        graph_map.optimize(obstacles_and_borders);
 
         // // Path Planning // //
 

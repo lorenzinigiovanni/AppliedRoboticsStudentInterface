@@ -3,6 +3,7 @@
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 #include "CDT/CDT.h"
 #include "boost/graph/adjacency_list.hpp"
+#include "settings.hpp"
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -116,14 +117,102 @@ public:
      * @brief Add gates to the graph connecting it to the nearest vertex
      *
      * @param gates A list of gates to add to the graph
+     * @param obstacles A list of obstacles to check for interference
      */
-    void add_gates(const std::vector<Polygon> &gates)
+    void add_gates(const std::vector<Polygon> &gates, std::vector<Polygon> obstacles, std::vector<Polygon> borders)
     {
+        double offset = ((double)Settings::offset) / 1000.0;
+
+        // Search for the maximum and minimum coordinates of the borders
+        double x_max = -1;
+        double x_min = 1000;
+        double y_max = -1;
+        double y_min = 1000;
+
+        for (int i = 0; i < borders.size(); i++)
+        {
+            for (int j = 0; j < borders[i].size(); j++)
+            {
+                // Since the borders have been offsetted, offset also the max min coordinates
+                if (borders[i][j].x > x_max)
+                {
+                    x_max = borders[i][j].x - offset;
+                }
+                if (borders[i][j].x < x_min)
+                {
+                    x_min = borders[i][j].x + offset;
+                }
+                if (borders[i][j].y > y_max)
+                {
+                    y_max = borders[i][j].y - offset;
+                }
+                if (borders[i][j].y < y_min)
+                {
+                    y_min = borders[i][j].y + offset;
+                }
+            }
+        }
+
         // For each gate
         for (size_t gate = 0; gate < gates.size(); gate++)
         {
             // Get the gate center (the gate is a rectangle)
             GraphType::vertex_descriptor gate_center = add_rectangle_center(gates[gate]);
+
+            Point gc = graph[gate_center].point;
+
+            Point offsetted_gate;
+            offsetted_gate.x = gc.x;
+            offsetted_gate.y = gc.y;
+
+            bool inside_borders = false;
+
+            // Check if the gate center is already inside the borders
+            if ((gc.y < y_max) && (gc.y > y_min) && (gc.x < x_max) && (gc.x > x_min))
+            {
+                inside_borders = true;
+            }
+            else
+            {
+                // If gate center is over the borders shift down
+                if (gc.y > y_max)
+                {
+                    offsetted_gate.y -= offset;
+                }
+                // If gate center is down the borders shift up
+                else if (gc.y < y_min)
+                {
+                    offsetted_gate.y += offset;
+                }
+                // If gate center is right the borders shift left
+                if (gc.x > x_max)
+                {
+                    offsetted_gate.x -= offset;
+                }
+                // If gate center is left the borders shift right
+                else if (gc.x < x_min)
+                {
+                    offsetted_gate.x += offset;
+                }
+            }
+
+            GraphType::vertex_descriptor point_to_add = gate_center;
+
+            // If gate center is not inside the borders, create another junnction point by offsetting its value in the right direction
+            if (!inside_borders)
+            {
+                VertexProperty property(offsetted_gate, WAYPOINT);
+
+                // Add the vertex to the graph
+                GraphType::vertex_descriptor offsetted_gate_vertex = boost::add_vertex(property, graph);
+
+                float distance = distance_btw_points(gate_center, offsetted_gate_vertex);
+
+                // Add an edge between the gate and the offsetted waypoint
+                std::pair<GraphType::edge_descriptor, bool> e_vg = boost::add_edge(offsetted_gate_vertex, gate_center, {distance}, graph);
+
+                point_to_add = offsetted_gate_vertex;
+            }
 
             // Temporary variables to store the nearest vertex and its distance
             GraphType::vertex_descriptor near_waypoint;
@@ -133,12 +222,32 @@ public:
             boost::graph_traits<GraphType>::vertex_iterator v, v_end;
             for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
             {
-                // Search for a waypoint that is near the gate
-                if (graph[*v].type == WAYPOINT)
+                // Search for a waypoint that is near the gate/ofsetted gate
+                if (graph[*v].type == WAYPOINT && *v != point_to_add)
                 {
+                    // Check for intersection with all obstacles for the edge between the gate/ofsetted gate and the waypoint
+                    bool intersect = false;
+                    for (int i = 0; i < obstacles.size(); i++)
+                    {
+                        if (intersect)
+                        {
+                            break;
+                        }
+
+                        for (int j = 0; j < obstacles[i].size(); j++)
+                        {
+                            // Check if there is an intersection between the edge connecting the current waypoint and the gate/ofsetted gate and the obstacles in-between
+                            if (isIntersecting(graph[*v].point, graph[point_to_add].point, obstacles[i][j], obstacles[i][(j + 1) % obstacles[i].size()]))
+                            {
+                                intersect = true;
+                                break;
+                            }
+                        }
+                    }
+
                     // Keep the one that is the closest
-                    float distance = distance_btw_points(*v, gate_center);
-                    if (distance < tmpDistance)
+                    float distance = distance_btw_points(*v, point_to_add);
+                    if (!intersect && distance < tmpDistance)
                     {
                         tmpDistance = distance;
                         near_waypoint = *v;
@@ -147,7 +256,7 @@ public:
             }
 
             // Add an edge between the gate and the nearest waypoint
-            std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(gate_center, near_waypoint, {tmpDistance}, graph);
+            std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(point_to_add, near_waypoint, {tmpDistance}, graph);
         }
     }
 
