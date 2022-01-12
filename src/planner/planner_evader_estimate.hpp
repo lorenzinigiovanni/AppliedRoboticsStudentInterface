@@ -74,11 +74,14 @@ protected:
                 // Use the PDDL planner to get the distance between the evader and the gate
                 PlannerDistance distance_planner(graph_map, gates[i], 2);
                 distance_planner.write_problem();
-                distance_planner.generate_plan();
-                distance_planner.extract_path_indexes_from_plan();
+                bool found_plan = distance_planner.generate_plan();
 
-                // Store the distance between the evader and the gate
-                evader_distances[gates[i]] = distance_planner.get_cost();
+                if (found_plan)
+                {
+                    // Store the distance between the evader and the gate
+                    distance_planner.extract_path_indexes_from_plan();
+                    evader_distances[gates[i]] = distance_planner.get_cost();
+                }
             }
 
             // Check if the file storing the distances exists
@@ -165,7 +168,7 @@ protected:
             int lenght_difference = -10000;
             int index = 0;
 
-            // Search the gate to whom the escaper robot have the major decrease in distance and so it's heading to 
+            // Search the gate to whom the escaper robot have the major decrease in distance and so it's heading to
             for (int i = 0; i < gates_str.size(); i++)
             {
                 // The number of measured distances (steps)
