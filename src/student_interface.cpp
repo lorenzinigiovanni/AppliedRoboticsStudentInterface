@@ -11,6 +11,7 @@
 #include "router.hpp"
 #include "convex_hull.hpp"
 #include "settings.hpp"
+#include "image_handle.hpp"
 
 #include <iostream>
 #include <experimental/filesystem>
@@ -215,11 +216,44 @@ namespace student
             unsigned int size_x = 900;
             unsigned int size_y = 650;
 
+            std::string path = Settings::workspace_path + "images/";
+
             cv::Mat img = cv::Mat::zeros(size_y, size_x, CV_8UC3);
 
+            if (Settings::deep_debug_img)
+            {
+                show_polygon_list(img, obstacles);
+                show_polygon_list(img, borders);
+                show_polygon_list(img, gates);
+                write_img(img, path);
+
+                img = cv::Mat::zeros(size_y, size_x, CV_8UC3);
+
+                show_polygon_list(img, offsetted_borders);
+                show_polygon_list(img, intersected_obstacles_borders);
+                write_img(img, path);
+
+                img = cv::Mat::zeros(size_y, size_x, CV_8UC3);
+            }
+
+            show_polygon_list(img, offsetted_borders);
+            show_polygon_list(img, obstacles_convex_hull);
+            if (Settings::deep_debug_img)
+            {
+                write_img(img, path);
+            }
+
             cell_decomposition.show_triangles(img);
+            if (Settings::deep_debug_img)
+            {
+                write_img(img, path);
+            }
 
             graph_map.show_graph(img);
+            if (Settings::deep_debug_img)
+            {
+                write_img(img, path);
+            }
 
             if (pursuer_planner != nullptr)
             {
@@ -228,6 +262,10 @@ namespace student
             if (evader_planner != nullptr)
             {
                 evader_planner->show_plan(img);
+            }
+            if (Settings::deep_debug_img)
+            {
+                write_img(img, path);
             }
 
             if (pursuer_router != nullptr)
@@ -238,20 +276,7 @@ namespace student
             {
                 evader_router->show_path(img, 1);
             }
-
-            // Show images on screen
-            // cv::imshow("Image", img);
-            // cv::waitKey(1);
-
-            // Save images to file
-            std::string path = Settings::workspace_path + "images/";
-            std::experimental::filesystem::path photo_path(path);
-            int last_image = 0;
-            for (const auto &file : std::experimental::filesystem::directory_iterator(photo_path))
-            {
-                last_image++;
-            }
-            cv::imwrite(path + "image-" + std::to_string(last_image + 1) + ".png", img);
+            write_img(img, path);
         }
 
         // Deletes

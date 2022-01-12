@@ -7,6 +7,7 @@ class Settings
 public:
     // Flag for printing image
     static const bool debug_img = true;
+    static const bool deep_debug_img = false;
 
     // Lenght of the path that the robot will do in a step (-1 for infinite)
     static const int path_length = 1;
