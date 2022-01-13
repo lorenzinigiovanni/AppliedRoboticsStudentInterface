@@ -220,10 +220,12 @@ public:
         }
 
         // for every Dubins Solution compute the current path and add it to the path
+        double total_lenght = 0.0;
         for (int i = 0; i < steps; i++)
         {
             // get the current path and add it to the path
-            std::vector<Pose> current_path = solutions[i].c.to_pose_vect();
+            std::vector<Pose> current_path = solutions[i].c.to_pose_vect(total_lenght);
+            total_lenght += solutions[i].c.L;
 
             // add the current path to the path
             path.insert(path.end(), std::make_move_iterator(current_path.begin()), std::make_move_iterator(current_path.end()));

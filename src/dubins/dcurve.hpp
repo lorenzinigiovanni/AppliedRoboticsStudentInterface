@@ -66,20 +66,24 @@ public:
      *
      * @return A vector of Pose
      */
-    std::vector<Pose> to_pose_vect()
+    std::vector<Pose> to_pose_vect(double initial_l = 0.0)
     {
         std::vector<Pose> path; // path composed of the three arcs
 
         // convert arc1 to pose vector and add to path
-        std::vector<Pose> arc1 = a1.to_pose_vect();
+        std::vector<Pose> arc1 = a1.to_pose_vect(initial_l);
         path.insert(path.end(), std::make_move_iterator(arc1.begin()), std::make_move_iterator(arc1.end()));
 
+        initial_l += a1.L;
+
         // convert arc2 to pose vector and add to path
-        std::vector<Pose> arc2 = a2.to_pose_vect();
+        std::vector<Pose> arc2 = a2.to_pose_vect(initial_l);
         path.insert(path.end(), std::make_move_iterator(arc2.begin()), std::make_move_iterator(arc2.end()));
 
+        initial_l += a2.L;
+
         // convert arc3 to pose vector and add to path
-        std::vector<Pose> arc3 = a3.to_pose_vect();
+        std::vector<Pose> arc3 = a3.to_pose_vect(initial_l);
         path.insert(path.end(), std::make_move_iterator(arc3.begin()), std::make_move_iterator(arc3.end()));
 
         return path;

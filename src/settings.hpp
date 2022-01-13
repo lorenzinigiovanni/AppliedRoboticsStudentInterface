@@ -15,7 +15,7 @@ public:
     // Set the behavioural complexity of the robots (1, 2, 3)
     static const int behavioural_complexity = 3;
 
-    // Offset that is applied to polygon (95mm)
+    // Offset that is applied to polygon (footprint_length/2 + axel_dx = 190/2 + 50) --> 1_lego_robot/urdf/my_robot_2.xacro
     static const int offset = 95;
 
     // Maximum curvature, critical maximum is 22

@@ -119,21 +119,21 @@ public:
      *
      * @return A vector of Pose
      */
-    std::vector<Pose> to_pose_vect()
+    std::vector<Pose> to_pose_vect(double initial_l = 0.0)
     {
         std::vector<Pose> pose_vect;
 
         // prepare parameter to get samples of the Dubins Arc with n points
-        double delta = L / 100.0;
+        double delta = 0.001;
 
         // get vector of pose from a Dubins Arc
-        DubinsPoint pi = i;
-        for (double l = 0.0; l < L; l += delta)
+        // DubinsPoint pi = i;
+        for (double l = 0; l < L; l += delta)
         {
             // Calculate the new point at distance delta
-            pi = circLine(delta, pi, k);
+            DubinsPoint pi = circLine(l, i, k);
             // Create a Pose(s, x, y, t, k) s = pathlength, x = x coordinate, y = y coordinate, theta = angle, kappa = curvature
-            pose_vect.push_back(Pose(delta, pi.x, pi.y, pi.t, k));
+            pose_vect.push_back(Pose(initial_l + l, pi.x, pi.y, pi.t, k));
         }
 
         return pose_vect;

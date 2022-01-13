@@ -199,7 +199,11 @@ namespace student
             // Compute the evader path
             evader_router->elaborate_solution();
             // Extract the evader path and put it in the second position of the paths vector
-            paths[1].points = evader_router->get_path(Settings::path_length);
+            std::vector<Pose> evader_poses = evader_router->get_path(Settings::path_length);
+            for (int i = 0; i < evader_poses.size(); i++)
+            {
+                paths[1].points.emplace_back(evader_poses[i].s, evader_poses[i].x, evader_poses[i].y, evader_poses[i].theta, evader_poses[i].kappa);
+            }
         }
 
         // Run the Dubins algorthm only if a pursuer plan has been found
@@ -212,7 +216,11 @@ namespace student
             // Compute the pursuer path
             pursuer_router->elaborate_solution();
             // Extract the pursuer path and put it in the first position of the paths vector
-            paths[0].points = pursuer_router->get_path(Settings::path_length);
+            std::vector<Pose> pursuer_poses = pursuer_router->get_path(Settings::path_length);
+            for (int i = 0; i < pursuer_poses.size(); i++)
+            {
+                paths[0].points.emplace_back(pursuer_poses[i].s, pursuer_poses[i].x, pursuer_poses[i].y, pursuer_poses[i].theta, pursuer_poses[i].kappa);
+            }
         }
 
         // Take the current time at the end of the planning function
