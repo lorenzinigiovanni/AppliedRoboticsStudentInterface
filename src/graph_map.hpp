@@ -355,12 +355,16 @@ public:
                             bool intersect = false;
                             for (int i = 0; i < obstacles.size(); i++)
                             {
+                                if (intersect)
+                                {
+                                    break;
+                                }
                                 for (int j = 0; j < obstacles[i].size(); j++)
                                 {
                                     if (isIntersecting(graph[*vertex].point, graph[*distance_2_vertex].point, obstacles[i][j], obstacles[i][(j + 1) % obstacles[i].size()]))
                                     {
                                         intersect = true;
-                                        goto label;
+                                        break;
                                     }
                                 }
                             }
@@ -370,9 +374,43 @@ public:
                             {
                                 std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(*vertex, *distance_2_vertex, {distance_btw_points(*vertex, *distance_2_vertex)}, graph);
                             }
+                        }
+                    }
+                }
+            }
 
-                        label:
-                            (void)0;
+            // For each vertex of the graph
+            boost::graph_traits<GraphType>::vertex_iterator near_vertex, near_vertex_end;
+            for (boost::tie(near_vertex, near_vertex_end) = boost::vertices(graph_copy); near_vertex != near_vertex_end; ++near_vertex)
+            {
+                if (*vertex != *near_vertex)
+                {
+                    // If the vertexes are near connect them
+                    float distance = distance_btw_points(*vertex, *near_vertex);
+                    if (distance < Settings::distance)
+                    {
+                        // Check for intersection with all obstacles for the edge between vertex and near_vertex
+                        bool intersect = false;
+                        for (int i = 0; i < obstacles.size(); i++)
+                        {
+                            if (intersect)
+                            {
+                                break;
+                            }
+                            for (int j = 0; j < obstacles[i].size(); j++)
+                            {
+                                if (isIntersecting(graph[*vertex].point, graph[*near_vertex].point, obstacles[i][j], obstacles[i][(j + 1) % obstacles[i].size()]))
+                                {
+                                    intersect = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // If the edge does not intersect with an obstacle add it to the graph
+                        if (!intersect)
+                        {
+                            std::pair<GraphType::edge_descriptor, bool> e = boost::add_edge(*vertex, *near_vertex, {distance}, graph);
                         }
                     }
                 }
