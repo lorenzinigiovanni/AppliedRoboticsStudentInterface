@@ -206,22 +206,16 @@ public:
     /**
      * @brief Get the computed Dubins Path as a vector of Pose
      *
-     * @param Number of steps to get the path (-1 for all)
+     * @param lenght Max lenght to be moved
      * @return A vector of Pose that represent the computed Dubins Path
      */
-    std::vector<Pose> get_path(int steps)
+    std::vector<Pose> get_path(double lenght)
     {
         std::vector<Pose> path;
 
-        // the steps should be smaller than the solution size
-        if (steps > solutions.size() || steps == -1)
-        {
-            steps = solutions.size();
-        }
-
         // for every Dubins Solution compute the current path and add it to the path
         double total_lenght = 0.0;
-        for (int i = 0; i < steps; i++)
+        for (int i = 0; i < solutions.size(); i++)
         {
             // get the current path and add it to the path
             std::vector<Pose> current_path = solutions[i].c.to_pose_vect(total_lenght);
@@ -229,6 +223,11 @@ public:
 
             // add the current path to the path
             path.insert(path.end(), std::make_move_iterator(current_path.begin()), std::make_move_iterator(current_path.end()));
+
+            if (total_lenght >= lenght)
+            {
+                break;
+            }
         }
 
         return path;

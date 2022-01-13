@@ -9,8 +9,8 @@ public:
     static const bool debug_img = true;
     static const bool deep_debug_img = false;
 
-    // Lenght of the path that the robot will do in a step (-1 for infinite)
-    static const int path_length = 1;
+    // Lenght of the path that the robot will do in a step
+    static constexpr double path_length = 0.2;
 
     // Set the behavioural complexity of the robots (1, 2, 3)
     static const int behavioural_complexity = 3;
