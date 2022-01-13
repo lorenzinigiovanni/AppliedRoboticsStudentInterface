@@ -18,9 +18,9 @@ private:
     std::vector<Dubins::Solution> solutions; // solutions of the Dubins paths
     std::vector<DubinsPoint> dubins_points;  // Dubins points
 
-    double k_max = Settings::k_max;      // maximum curvature, critical maximum is 22
-    int n_angle_steps = 32; // number of angles for the discretization of the angle
-    int iterations = 2;     // iterations of the Dubins algorithm
+    double k_max = Settings::k_max; // maximum curvature, critical maximum is 22
+    int n_angle_steps = 32;         // number of angles for the discretization of the angle
+    int iterations = 2;             // iterations of the Dubins algorithm
 
 public:
     /**
@@ -251,7 +251,7 @@ private:
     std::vector<Point> optimize_path(std::vector<Point> &path)
     {
         std::vector<Point> optimized_path;
-        
+
         // push the first point of the path
         optimized_path.push_back(path[0]);
 
@@ -259,12 +259,12 @@ private:
 
         // for each element in the path to optimize
         for (int i = 1; i < path.size(); i++)
-        {   
+        {
             // iteratively increase the distance between the current and the previous point
             distance += distance_btw_points(path[i - 1], path[i]);
 
             // if the distance is above a threshold
-            if (distance >= 0.1)
+            if (distance >= 0.1 || i == path.size() - 1)
             {
                 // add the current point to the path, so discard the other point that would be close to it
                 optimized_path.push_back(path[i]);
