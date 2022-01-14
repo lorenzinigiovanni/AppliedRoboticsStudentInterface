@@ -144,9 +144,9 @@ namespace student
         // // Path Planning // //
 
         // Planners
-        PlannerEvader *evader_planner;
-        PlannerEvaderEstimate *evader_estimated_planner;
-        PlannerPursuer *pursuer_planner;
+        PlannerEvader *evader_planner = NULL;
+        PlannerEvaderEstimate *evader_estimated_planner = NULL;
+        PlannerPursuer *pursuer_planner = NULL;
 
         // Planner for planning the evader path
         evader_planner = new PlannerEvader(graph_map, Settings::behavioural_complexity);
@@ -186,8 +186,8 @@ namespace student
         // // Path Computation // //
 
         // Routers
-        Router *evader_router;
-        Router *pursuer_router;
+        Router *evader_router = NULL;
+        Router *pursuer_router = NULL;
 
         // Run the Dubins algorthm only if a evader plan has been found
         if (evader_plan_found)
@@ -274,11 +274,11 @@ namespace student
                 write_img(img, path);
             }
 
-            if (pursuer_planner != nullptr)
+            if (pursuer_planner)
             {
                 pursuer_planner->show_plan(img);
             }
-            if (evader_planner != nullptr)
+            if (evader_planner)
             {
                 evader_planner->show_plan(img);
             }
@@ -287,11 +287,11 @@ namespace student
                 write_img(img, path);
             }
 
-            if (pursuer_router != nullptr)
+            if (pursuer_router)
             {
                 pursuer_router->show_path(img, 0);
             }
-            if (evader_router != nullptr)
+            if (evader_router)
             {
                 evader_router->show_path(img, 1);
             }

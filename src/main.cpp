@@ -95,9 +95,9 @@ int main()
     graph_map.optimize(obstacles_convex_hull);
 
     // Planners
-    PlannerEvader *evader_planner;
-    PlannerEvaderEstimate *evader_estimated_planner;
-    PlannerPursuer *pursuer_planner;
+    PlannerEvader *evader_planner = NULL;
+    PlannerEvaderEstimate *evader_estimated_planner = NULL;
+    PlannerPursuer *pursuer_planner = NULL;
 
     // Planner for evader
     evader_planner = new PlannerEvader(graph_map, behavioural_complexity);
@@ -126,8 +126,8 @@ int main()
     // // Path Computation // //
 
     // Routers
-    Router *pursuer_router;
-    Router *evader_router;
+    Router *pursuer_router = NULL;
+    Router *evader_router = NULL;
 
     if (evader_plan_found)
     {
@@ -159,20 +159,20 @@ int main()
 
         graph_map.show_graph(img);
 
-        if (pursuer_planner != nullptr)
+        if (pursuer_planner)
         {
             pursuer_planner->show_plan(img);
         }
-        if (evader_planner != nullptr)
+        if (evader_planner)
         {
             evader_planner->show_plan(img);
         }
 
-        if (pursuer_router != nullptr)
+        if (pursuer_router)
         {
             pursuer_router->show_path(img, 0);
         }
-        if (evader_router != nullptr)
+        if (evader_router)
         {
             evader_router->show_path(img, 1);
         }
