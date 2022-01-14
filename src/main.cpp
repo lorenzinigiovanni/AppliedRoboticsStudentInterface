@@ -121,7 +121,7 @@ int main()
         pursuer_planner->write_problem();
         pursuer_plan_found = pursuer_planner->generate_plan();
         pursuer_path = pursuer_planner->extract_path_from_plan();
-        }
+    }
 
     // // Path Computation // //
 
@@ -154,6 +154,7 @@ int main()
         unsigned int size_y = 650;
 
         cv::Mat img = cv::Mat::zeros(size_y, size_x, CV_8UC3);
+        std::string path = Settings::workspace_path + "images/";
 
         cell_decomposition.show_triangles(img);
 
@@ -171,14 +172,15 @@ int main()
         if (pursuer_router)
         {
             pursuer_router->show_path(img, 0);
+            pursuer_router->show_collision_points(img, obstacles_and_borders);
         }
         if (evader_router)
         {
             evader_router->show_path(img, 1);
+            evader_router->show_collision_points(img, obstacles_and_borders);
         }
 
-        cv::imshow("Image", img);
-        cv::waitKey(0);
+        cv::imwrite(path + "image-" + std::to_string(1) + ".png", img);
     }
 
     // Deletes

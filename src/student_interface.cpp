@@ -290,19 +290,14 @@ namespace student
             if (pursuer_router)
             {
                 pursuer_router->show_path(img, 0);
+                pursuer_router->show_collision_points(img, obstacles_and_borders);
             }
             if (evader_router)
             {
                 evader_router->show_path(img, 1);
-            }
+                evader_router->show_collision_points(img, obstacles_and_borders);
 
-            // Intersezioni
-            std::cout << std::endl
-                      << "Pursuer" << std::endl;
-            pursuer_router->show_collision_points(img, obstacles_and_borders);
-            std::cout << std::endl
-                      << "Evader" << std::endl;
-            evader_router->show_collision_points(img, obstacles_and_borders);
+            }
 
             write_img(img, path);
         }
