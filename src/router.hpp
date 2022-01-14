@@ -105,7 +105,11 @@ public:
                         DubinsArc::IntersectionPoints intersections = solution.c.collision_check(obstacles_and_borders);
 
                         // penalize the path that go trought an obstacle
-                        double penalty = 10.0;
+                        double penalty = 1.0;
+                        if (intersections.intersect)
+                        {
+                            penalty *= intersections.points.size();
+                        }
 
                         // the length of the path from the FROM point to the END is shorter than the previous one and the manouvre does not collide
                         if (lenghts_m[n][angle_1_index] > l1 + l2 && !(intersections.intersect))
