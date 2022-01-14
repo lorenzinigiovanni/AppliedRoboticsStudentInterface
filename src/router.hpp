@@ -3,6 +3,7 @@
 #include "../../simulator/src/9_project_interface/include/utils.hpp"
 
 #include "dubins/dpoint.hpp"
+#include "dubins/darc.hpp"
 #include "dubins/dubins.hpp"
 #include "settings.hpp"
 #include <vector>
@@ -28,8 +29,9 @@ public:
      *
      * @param path Path to add
      * @param theta_start Initial angle of the robot
+     * @param obstacles_and_borders Obstacles and borders that will be used to check if collisions happen
      */
-    void add_path(std::vector<Point> &_path, float theta_start)
+    void add_path(std::vector<Point> &_path, float theta_start, std::vector<Polygon> obstacles_and_borders)
     {
         std::vector<Point> path = optimize_path(_path);
         int path_lenght = path.size();
@@ -99,11 +101,26 @@ public:
                             l2 = lenghts_m[n + 1][angle_2_index];
                         }
 
-                        // the length of the path from the FROM point to the END is shorter than the previous one
-                        if (lenghts_m[n][angle_1_index] > l1 + l2)
+                        // find the collision for the current Dubins path and the obstacles
+                        DubinsArc::IntersectionPoints intersections = solution.c.collision_check(obstacles_and_borders);
+
+                        // penalize the path that go trought an obstacle
+                        double penalty = 10.0;
+
+                        // the length of the path from the FROM point to the END is shorter than the previous one and the manouvre does not collide
+                        if (lenghts_m[n][angle_1_index] > l1 + l2 && !(intersections.intersect))
                         {
                             // the leght of the path from the FROM point
                             lenghts_m[n][angle_1_index] = l1 + l2;
+
+                            // the angle of the TO point wrt the angle of the FROM point
+                            angles_m[n + 1][angle_1_index] = angle_2_index;
+                        }
+                        // the length of the path from the FROM point to the END is shorter than the previous one and the manouvre does collide
+                        else if (lenghts_m[n][angle_1_index] > l1 + l2 + penalty)
+                        {
+                            // the leght of the path from the FROM point
+                            lenghts_m[n][angle_1_index] = l1 + l2 + penalty;
 
                             // the angle of the TO point wrt the angle of the FROM point
                             angles_m[n + 1][angle_1_index] = angle_2_index;
@@ -234,7 +251,7 @@ public:
     }
 
     /**
-     * @brief Print the path on the image
+     * @brief Show the path on the image
      *
      * @param img The image to add the path to
      * @param index The index of the robot to color the curve
@@ -245,6 +262,30 @@ public:
         for (int i = 0; i < solutions.size(); i++)
         {
             solutions[i].c.show_dcurve(img, index);
+        }
+    }
+
+    /**
+     * @brief Show the collision point
+     *
+     * @param img The image to add the points to
+     * @param obstacles_and_borders Obstacles and borders that will be used to check if collisions happen
+     */
+    void show_collision_points(cv::Mat &img, std::vector<Polygon> obstacles_and_borders)
+    {
+        std::vector<Point> contours = {};
+        for (int i = 0; i < solutions.size(); i++)
+        {
+            // check for collision for every curve found
+            DubinsArc::IntersectionPoints intersection = solutions[i].c.collision_check(obstacles_and_borders);
+            if (intersection.intersect)
+            {
+                // Draw all the collision points if any
+                for (int j = 0; j < intersection.points.size(); j++)
+                {
+                    cv::circle(img, cv::Point(int(intersection.points[j].x * 500 + 50), 650 - int(intersection.points[j].y * 500 + 50)), 5, cv::Scalar(255, 200, 125), cv::FILLED);
+                }
+            }
         }
     }
 

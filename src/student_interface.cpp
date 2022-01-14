@@ -195,7 +195,7 @@ namespace student
             // Router for evader
             evader_router = new Router();
             // Set the found plan in the evader router along with its starting angle
-            evader_router->add_path(evader_path, theta[1]);
+            evader_router->add_path(evader_path, theta[1], obstacles_and_borders);
             // Compute the evader path
             evader_router->elaborate_solution();
             // Extract the evader path and put it in the second position of the paths vector
@@ -212,7 +212,7 @@ namespace student
             // Router for pursuer
             pursuer_router = new Router();
             // Set the found plan in the puruser router along with its starting angle
-            pursuer_router->add_path(pursuer_path, theta[0]);
+            pursuer_router->add_path(pursuer_path, theta[0], obstacles_and_borders);
             // Compute the pursuer path
             pursuer_router->elaborate_solution();
             // Extract the pursuer path and put it in the first position of the paths vector
@@ -295,6 +295,15 @@ namespace student
             {
                 evader_router->show_path(img, 1);
             }
+
+            // Intersezioni
+            std::cout << std::endl
+                      << "Pursuer" << std::endl;
+            pursuer_router->show_collision_points(img, obstacles_and_borders);
+            std::cout << std::endl
+                      << "Evader" << std::endl;
+            evader_router->show_collision_points(img, obstacles_and_borders);
+
             write_img(img, path);
         }
 

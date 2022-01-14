@@ -28,7 +28,7 @@ int main()
     std::vector<float> theta;
 
     // Robot 1 location
-    x.push_back(0.15);
+    x.push_back(0.2);
     y.push_back(0.15);
     theta.push_back(M_PI_2);
 
@@ -94,10 +94,6 @@ int main()
     graph_map.add_robots(x, y);
     graph_map.optimize(obstacles_convex_hull);
 
-    // Routers
-    Router *pursuer_router;
-    Router *evader_router;
-
     // Planners
     PlannerEvader *evader_planner;
     PlannerEvaderEstimate *evader_estimated_planner;
@@ -115,31 +111,40 @@ int main()
     bool evader_estimated_plan_found = evader_estimated_planner->generate_plan();
     std::vector<int> evader_estimated_path = evader_estimated_planner->extract_path_indexes_from_plan();
 
+    bool pursuer_plan_found = false;
+    std::vector<Point> pursuer_path;
+
     if (evader_estimated_plan_found)
     {
         // Planner for pursuer
         pursuer_planner = new PlannerPursuer(graph_map, behavioural_complexity, evader_estimated_path);
         pursuer_planner->write_problem();
-        bool pursuer_plan_found = pursuer_planner->generate_plan();
-        std::vector<Point> pursuer_path = pursuer_planner->extract_path_from_plan();
-
-        if (pursuer_plan_found)
-        {
-            // Router for pursuer
-            pursuer_router = new Router();
-            pursuer_router->add_path(pursuer_path, theta[0]);
-            pursuer_router->elaborate_solution();
-            std::vector<Pose> pursuer_solution = pursuer_router->get_path(1);
+        pursuer_plan_found = pursuer_planner->generate_plan();
+        pursuer_path = pursuer_planner->extract_path_from_plan();
         }
-    }
+
+    // // Path Computation // //
+
+    // Routers
+    Router *pursuer_router;
+    Router *evader_router;
 
     if (evader_plan_found)
     {
         // Route for evader
         evader_router = new Router();
-        evader_router->add_path(evader_path, theta[1]);
+        evader_router->add_path(evader_path, theta[1], obstacles_and_borders);
         evader_router->elaborate_solution();
         std::vector<Pose> evader_solution = evader_router->get_path(1);
+    }
+
+    if (pursuer_plan_found)
+    {
+        // Router for pursuer
+        pursuer_router = new Router();
+        pursuer_router->add_path(pursuer_path, theta[0], obstacles_and_borders);
+        pursuer_router->elaborate_solution();
+        std::vector<Pose> pursuer_solution = pursuer_router->get_path(1);
     }
 
     bool debug_img = true;

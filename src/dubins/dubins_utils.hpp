@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include "../../../simulator/src/9_project_interface/include/utils.hpp"
 
 using namespace std;
 
@@ -74,7 +75,7 @@ public:
 
     /**
      * @brief Check the validity of a Dubins curve
-     * 
+     *
      * @param s1 Lenght of the first arc
      * @param k0 Curvature of the first arc
      * @param s2 Lenght of the second arc
@@ -99,5 +100,28 @@ public:
 
         bool Lpos = (s1 > 0) || (s2 > 0) || (s3 > 0);
         return (sqrt(eq1 * eq1 + eq2 * eq2 + eq3 * eq3) < 1.e-10) && Lpos;
+    }
+    /**
+     * @brief Compute cross product between two points
+     *
+     * @param p1
+     * @param p2
+     * @return double
+     */
+    double static cprod(Point p1, Point p2)
+    {
+        return p1.x * p2.y - p1.y * p2.x;
+    }
+    
+    /**
+     * @brief Compute dot product between two points
+     *
+     * @param p1
+     * @param p2
+     * @return double
+     */
+    double static dprod(Point p1, Point p2)
+    {
+        return p1.x * p2.x + p1.y * p2.y;
     }
 };

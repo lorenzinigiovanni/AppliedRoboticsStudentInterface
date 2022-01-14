@@ -51,9 +51,9 @@ public:
     void show_dcurve(cv::Mat &img, int color_index)
     {
         // color start green, middle blue, end red
-        // a1->show_darc(img, 0);
-        // a2->show_darc(img, 1);
-        // a3->show_darc(img, 2);
+        // a1.show_darc(img, 0);
+        // a2.show_darc(img, 1);
+        // a3.show_darc(img, 2);
 
         // color depends on robot
         a1.show_darc(img, color_index);
@@ -87,5 +87,31 @@ public:
         path.insert(path.end(), std::make_move_iterator(arc3.begin()), std::make_move_iterator(arc3.end()));
 
         return path;
+    }
+
+    /**
+     * @brief Check for collisions in the curve
+     * 
+     * @param obstacles_and_borders  Obstacles and borders that will be used to check if collisions happen
+     * @return DubinsArc::IntersectionPoints, it will contain if a collision has occurred and the intersection points
+     */
+    DubinsArc::IntersectionPoints collision_check(std::vector<Polygon> obstacles_and_borders)
+    {
+        // Run collision check for every arc that composes the curve
+        DubinsArc::IntersectionPoints i1 = a1.collision_check(obstacles_and_borders);
+        DubinsArc::IntersectionPoints i2 = a2.collision_check(obstacles_and_borders);
+        DubinsArc::IntersectionPoints i3 = a3.collision_check(obstacles_and_borders);
+
+        // Concatenate all the results
+        std::vector<Point> points;
+        points.insert(points.end(), std::make_move_iterator(i1.points.begin()), std::make_move_iterator(i1.points.end()));
+        points.insert(points.end(), std::make_move_iterator(i2.points.begin()), std::make_move_iterator(i2.points.end()));
+        points.insert(points.end(), std::make_move_iterator(i3.points.begin()), std::make_move_iterator(i3.points.end()));
+
+        bool intersects = i1.intersect || i2.intersect || i3.intersect;
+
+        DubinsArc::IntersectionPoints solution = DubinsArc::IntersectionPoints(intersects, points);
+
+        return solution;
     }
 };
