@@ -15,14 +15,14 @@ public:
     // Set the behavioural complexity of the robots (1, 2, 3)
     static const int behavioural_complexity = 3;
 
-    // Offset that is applied to polygon (footprint_length/2 + axel_dx = 190/2 + 50) --> 1_lego_robot/urdf/my_robot_2.xacro
-    static const int offset = 95;
+    // Offset that is applied to polygon (the radius of the footprint)
+    static const int offset = 105;
 
     // Set neighbouring distance to connect close points in the graph
     static constexpr float distance = 0.1;
 
     // Maximum curvature, critical maximum is 22
-    static constexpr double k_max = 20;
+    static constexpr double k_max = 15;
 
     // Absolute path to the workspace folder
     static std::string workspace_path;

@@ -20,8 +20,8 @@ private:
     std::vector<DubinsPoint> dubins_points;  // Dubins points
 
     double k_max = Settings::k_max; // maximum curvature, critical maximum is 22
-    int n_angle_steps = 32;         // number of angles for the discretization of the angle
-    int iterations = 2;             // iterations of the Dubins algorithm
+    double n_angle_steps = 20.0;    // number of angles for the discretization of the angle
+    int iterations = 3;             // iterations of the Dubins algorithm
 
 public:
     /**
@@ -38,6 +38,33 @@ public:
 
         double angle = 2 * M_PI;
         double angle_step = angle / n_angle_steps;
+
+        // Store the index of the angle in the previous point for each iteration
+        std::vector<int> previous_angle_index(iterations);
+
+        // Find the indexes needed to compute back the angle
+        for (int i = 0; i < iterations; i++)
+        {
+            // g / h1
+            int angle_index = (int)round(theta_start / angle_step);
+
+            for (int j = 0; j < i; j++)
+            {
+                angle_index += (int)round(-previous_angle_index[j] * pow(3 / angle_step, j) + (3.0 / 2.0) * pow(3 / angle_step, j) * ((n_angle_steps - 1) / n_angle_steps));
+            }
+
+            // keep the angle index between 0 and the number of angles - 1
+            if (angle_index >= n_angle_steps)
+            {
+                angle_index = 0;
+            }
+            else if (angle_index < 0)
+            {
+                angle_index = 0;
+            }
+
+            previous_angle_index[i] = angle_index;
+        }
 
         // store the length of the path from a point to the end for every point and angle
         std::vector<std::vector<double>> lenghts_m(path_lenght, std::vector<double>(n_angle_steps, 10000.0));
@@ -71,8 +98,8 @@ public:
 
                             if (z > 0)
                             {
-                                angle_1 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, z - 1);
-                                angle_2 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, z - 1);
+                                angle_1 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, z - 1) * ((n_angle_steps - 1) / n_angle_steps);
+                                angle_2 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, z - 1) * ((n_angle_steps - 1) / n_angle_steps);
                             }
                         }
 
@@ -82,8 +109,8 @@ public:
 
                         if (iteration > 0)
                         {
-                            angle_1 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1);
-                            angle_2 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1);
+                            angle_1 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1) * ((n_angle_steps - 1) / n_angle_steps);
+                            angle_2 -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1) * ((n_angle_steps - 1) / n_angle_steps);
                         }
 
                         // instantiate the dubins points with the FROM and TO points and the angles
@@ -133,31 +160,6 @@ public:
                 }
             }
 
-            // store the index of the angle in the previous point for each iteration
-            std::vector<int> previous_angle_index(iterations);
-
-            // find the indexes needed to compute back the angle
-            for (int i = 0; i < iteration; i++)
-            {
-                int angle_index = (int)round(theta_start / angle_step);
-                for (int j = 0; j < i; j++)
-                {
-                    angle_index += -previous_angle_index[j] * pow(3 / angle_step, j) + (3.0 / 2.0) * pow(3 / angle_step, j);
-                }
-
-                // keep the angle index between 0 and the number of angles - 1
-                if (angle_index >= n_angle_steps)
-                {
-                    angle_index = 0;
-                }
-                else if (angle_index < 0)
-                {
-                    angle_index = 0;
-                }
-
-                previous_angle_index[i] = angle_index;
-            }
-
             // compute the best angle for the current iteration for each point
             for (int i = 0; i < path_lenght; i++)
             {
@@ -187,7 +189,7 @@ public:
 
                     if (iteration > 0)
                     {
-                        angle -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1);
+                        angle -= angle_step * (3.0 / 2.0) * std::pow(3.0 / n_angle_steps, iteration - 1) * ((n_angle_steps - 1) / n_angle_steps);
                     }
                 }
 
