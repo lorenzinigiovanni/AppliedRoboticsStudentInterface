@@ -165,7 +165,7 @@ protected:
                 break;
             }
 
-            int lenght_difference = -10000;
+            double lenght_difference = -10000;
             int index = 0;
 
             // Search the gate to whom the escaper robot have the major decrease in distance and so it's heading to
@@ -175,8 +175,19 @@ protected:
                 int size = gates_map[gates_str[i]].size();
 
                 // Distance difference
-                int current_lenght_difference = gates_map[gates_str[i]][size - 2] - gates_map[gates_str[i]][size - 1];
+                double current_lenght_difference = 0.0;
 
+                // Alpha coefficient
+                double alpha = 1.0;
+
+                // Account for the differences in distances, giving more importance to the last step
+                for (int j = size - 1; j > 0; j--)
+                {
+                    current_lenght_difference += ((double)(gates_map[gates_str[i]][j - 1] - gates_map[gates_str[i]][j])) * alpha;
+                    alpha *= 0.1;
+                }
+
+                // If the lenght difference for this gate is the biggest so far save it
                 if (current_lenght_difference > lenght_difference)
                 {
                     lenght_difference = current_lenght_difference;
