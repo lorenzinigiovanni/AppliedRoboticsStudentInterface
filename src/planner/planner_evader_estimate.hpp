@@ -131,24 +131,30 @@ protected:
             // For every line in the file
             while (std::getline(in_file, line))
             {
+                std::vector<std::string> str = split_string(line, "\t");
+
                 // For the first line
                 if (count == 0)
                 {
                     // Read the header containing the gates names and save them in the vector and map
-                    std::vector<std::string> str = split_string(line, "\t");
                     for (int i = 0; i < str.size(); i++)
                     {
-                        gates_map[str[i]] = std::vector<int>();
-                        gates_str.push_back(str[i]);
+                        if (str[i] != "")
+                        {
+                            gates_map[str[i]] = std::vector<int>();
+                            gates_str.push_back(str[i]);
+                        }
                     }
                 }
                 else
                 {
                     // Read the distances between evader robot and gates and store them in the map
-                    std::vector<std::string> str = split_string(line, "\t");
                     for (int i = 0; i < str.size(); i++)
                     {
-                        gates_map[gates_str[i]].push_back(std::atoi(str[i].c_str()));
+                        if (str[i] != "")
+                        {
+                            gates_map[gates_str[i]].push_back(std::atoi(str[i].c_str()));
+                        }
                     }
                 }
 
