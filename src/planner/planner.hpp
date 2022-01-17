@@ -285,10 +285,10 @@ public:
         // For every step in the plan
         for (int i = 1; i < path.size(); i++)
         {
-            int x1 = int(path[i - 1].x * 500) + 50;
-            int y1 = img.size().height - int(path[i - 1].y * 500) - 50;
-            int x2 = int(path[i].x * 500) + 50;
-            int y2 = img.size().height - int(path[i].y * 500) - 50;
+            int x1 = int(path[i - 1].x * 500);
+            int y1 = img.size().height - int(path[i - 1].y * 500);
+            int x2 = int(path[i].x * 500);
+            int y2 = img.size().height - int(path[i].y * 500);
 
             // Draw a line between the two points of the step in the image
             cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), color, 2);

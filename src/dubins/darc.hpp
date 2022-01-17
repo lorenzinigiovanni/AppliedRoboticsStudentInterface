@@ -90,7 +90,7 @@ public:
         {
             double s = L / n_points * index;
             DubinsPoint d = circLine(s, i, k);
-            contours.push_back(cv::Point(int(d.x * 500 + 50), img.size().height - int(d.y * 500 + 50)));
+            contours.push_back(cv::Point(int(d.x * 500), img.size().height - int(d.y * 500)));
         }
 
         cv::Scalar color;

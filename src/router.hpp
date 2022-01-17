@@ -289,7 +289,7 @@ public:
                 // Draw all the collision points if any
                 for (int j = 0; j < intersection.points.size(); j++)
                 {
-                    cv::circle(img, cv::Point(int(intersection.points[j].x * 500 + 50), 650 - int(intersection.points[j].y * 500 + 50)), 5, cv::Scalar(255, 200, 125), cv::FILLED);
+                    cv::circle(img, cv::Point(int(intersection.points[j].x * 500), img.size().height - int(intersection.points[j].y * 500)), 5, cv::Scalar(255, 200, 125), cv::FILLED);
                 }
             }
         }

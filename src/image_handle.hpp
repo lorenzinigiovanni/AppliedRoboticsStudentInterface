@@ -20,10 +20,10 @@ void show_polygon(cv::Mat &img, Polygon polygon)
         Point p1 = polygon[j];
         Point p2 = polygon[j + 1];
 
-        int x1 = int(p1.x * 500) + 50;
-        int y1 = img.size().height - int(p1.y * 500) - 50;
-        int x2 = int(p2.x * 500) + 50;
-        int y2 = img.size().height - int(p2.y * 500) - 50;
+        int x1 = int(p1.x * 500);
+        int y1 = img.size().height - int(p1.y * 500);
+        int x2 = int(p2.x * 500);
+        int y2 = img.size().height - int(p2.y * 500);
 
         cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 255, 255), 1);
     }
@@ -31,10 +31,10 @@ void show_polygon(cv::Mat &img, Polygon polygon)
     Point p1 = polygon[polygon.size() - 1];
     Point p2 = polygon[0];
 
-    int x1 = int(p1.x * 500) + 50;
-    int y1 = img.size().height - int(p1.y * 500) - 50;
-    int x2 = int(p2.x * 500) + 50;
-    int y2 = img.size().height - int(p2.y * 500) - 50;
+    int x1 = int(p1.x * 500);
+    int y1 = img.size().height - int(p1.y * 500);
+    int x2 = int(p2.x * 500);
+    int y2 = img.size().height - int(p2.y * 500);
 
     cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 255, 255), 1);
 }

@@ -232,8 +232,8 @@ namespace student
 
         if (Settings::debug_img)
         {
-            unsigned int size_x = 900;
-            unsigned int size_y = 650;
+            unsigned int size_x = 780;
+            unsigned int size_y = 530;
 
             std::string path = Settings::workspace_path + "images/";
 

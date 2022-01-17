@@ -445,10 +445,10 @@ public:
         boost::graph_traits<GraphType>::edge_iterator e, e_end;
         for (boost::tie(e, e_end) = boost::edges(graph); e != e_end; ++e)
         {
-            int x1 = int(graph[e->m_source].point.x * 500) + 50;
-            int y1 = img.size().height - int(graph[e->m_source].point.y * 500) - 50;
-            int x2 = int(graph[e->m_target].point.x * 500) + 50;
-            int y2 = img.size().height - int(graph[e->m_target].point.y * 500) - 50;
+            int x1 = int(graph[e->m_source].point.x * 500);
+            int y1 = img.size().height - int(graph[e->m_source].point.y * 500);
+            int x2 = int(graph[e->m_target].point.x * 500);
+            int y2 = img.size().height - int(graph[e->m_target].point.y * 500);
 
             // Draw a line between the two vertexes connected by the edge (light red color)
             cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(100, 100, 255), 2);
@@ -458,8 +458,8 @@ public:
         boost::graph_traits<GraphType>::vertex_iterator v, v_end;
         for (boost::tie(v, v_end) = boost::vertices(graph); v != v_end; ++v)
         {
-            int x = int(graph[*v].point.x * 500) + 50;
-            int y = img.size().height - int(graph[*v].point.y * 500) - 50;
+            int x = int(graph[*v].point.x * 500);
+            int y = img.size().height - int(graph[*v].point.y * 500);
 
             cv::Scalar color = cv::Scalar(255, 255, 255);
 
