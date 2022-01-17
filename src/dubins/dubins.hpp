@@ -274,6 +274,7 @@ public:
         double invK = 1 / sf.k_max;
         double C = cos(sf.th0) + cos(sf.thf);
         double S = 2 * sf.k_max + sin(sf.th0) + sin(sf.thf);
+        double atan = atan2(-C, S);
 
         double delta = -2 + 4 * pow(sf.k_max, 2) + 2 * cos(sf.th0 - sf.thf) + 4 * sf.k_max * (sin(sf.th0) + sin(sf.thf));
         if (delta < 0)
@@ -282,8 +283,8 @@ public:
         }
 
         double s2 = invK * sqrt(delta);
-        double s1 = invK * DubinsUtils::mod2pi(atan2(-C, S) - atan2(-2, sf.k_max * s2) - sf.th0);
-        double s3 = invK * DubinsUtils::mod2pi(atan2(-C, S) - atan2(-2, sf.k_max * s2) - sf.thf);
+        double s1 = invK * DubinsUtils::mod2pi(atan - atan2(-2, sf.k_max * s2) - sf.th0);
+        double s3 = invK * DubinsUtils::mod2pi(atan - atan2(-2, sf.k_max * s2) - sf.thf);
 
         return Ok_Pieces(true, NotStandardForm(s1, s2, s3));
     }
@@ -299,6 +300,7 @@ public:
         double invK = 1 / sf.k_max;
         double C = cos(sf.th0) + cos(sf.thf);
         double S = 2 * sf.k_max - sin(sf.th0) - sin(sf.thf);
+        double atan = atan2(C, S);
 
         double delta = -2 + 4 * pow(sf.k_max, 2) + 2 * cos(sf.th0 - sf.thf) - 4 * sf.k_max * (sin(sf.th0) + sin(sf.thf));
         if (delta < 0)
@@ -307,8 +309,8 @@ public:
         }
 
         double s2 = invK * sqrt(delta);
-        double s1 = invK * DubinsUtils::mod2pi(sf.th0 - atan2(C, S) + atan2(2, sf.k_max * s2));
-        double s3 = invK * DubinsUtils::mod2pi(sf.thf - atan2(C, S) + atan2(2, sf.k_max * s2));
+        double s1 = invK * DubinsUtils::mod2pi(sf.th0 - atan + atan2(2, sf.k_max * s2));
+        double s3 = invK * DubinsUtils::mod2pi(sf.thf - atan + atan2(2, sf.k_max * s2));
 
         return Ok_Pieces(true, NotStandardForm(s1, s2, s3));
     }
@@ -324,11 +326,16 @@ public:
         double invK = 1 / sf.k_max;
         double C = cos(sf.th0) - cos(sf.thf);
         double S = 2 * sf.k_max - sin(sf.th0) + sin(sf.thf);
+        double atan = atan2(C, S);
 
-        double delta = 6 - 4 * pow(sf.k_max, 2) + 2 * cos(sf.th0 - sf.thf) + 4 * sf.k_max * (sin(sf.th0) - sin(sf.thf));
+        double delta = 0.125 * (6 - 4 * pow(sf.k_max, 2) + 2 * cos(sf.th0 - sf.thf) + 4 * sf.k_max * (sin(sf.th0) - sin(sf.thf)));
+        if (abs(delta) > 1)
+        {
+            return Ok_Pieces(false, NotStandardForm(0, 0, 0));
+        }
 
-        double s2 = invK * DubinsUtils::mod2pi(2 * M_PI - acos(0.125 * delta));
-        double s1 = invK * DubinsUtils::mod2pi(sf.th0 - atan2(C, S) + 0.5 * sf.k_max * s2);
+        double s2 = invK * DubinsUtils::mod2pi(2 * M_PI - acos(delta));
+        double s1 = invK * DubinsUtils::mod2pi(sf.th0 - atan + 0.5 * sf.k_max * s2);
         double s3 = invK * DubinsUtils::mod2pi(sf.th0 - sf.thf + sf.k_max * (s2 - s1));
 
         return Ok_Pieces(true, NotStandardForm(s1, s2, s3));
@@ -345,11 +352,16 @@ public:
         double invK = 1 / sf.k_max;
         double C = cos(sf.thf) - cos(sf.th0);
         double S = 2 * sf.k_max + sin(sf.th0) - sin(sf.thf);
+        double atan = atan2(C, S);
 
-        double delta = 6 - 4 * pow(sf.k_max, 2) + 2 * cos(sf.th0 - sf.thf) - 4 * sf.k_max * (sin(sf.th0) - sin(sf.thf));
+        double delta = 0.125 * (6 - 4 * pow(sf.k_max, 2) + 2 * cos(sf.th0 - sf.thf) - 4 * sf.k_max * (sin(sf.th0) - sin(sf.thf)));
+        if (abs(delta) > 1)
+        {
+            return Ok_Pieces(false, NotStandardForm(0, 0, 0));
+        }
 
-        double s2 = invK * DubinsUtils::mod2pi(2 * M_PI - acos(0.125 * delta));
-        double s1 = invK * DubinsUtils::mod2pi(-sf.th0 + atan2(C, S) + 0.5 * sf.k_max * s2);
+        double s2 = invK * DubinsUtils::mod2pi(2 * M_PI - acos(delta));
+        double s1 = invK * DubinsUtils::mod2pi(atan - sf.th0 + 0.5 * sf.k_max * s2);
         double s3 = invK * DubinsUtils::mod2pi(sf.thf - sf.th0 + sf.k_max * (s2 - s1));
 
         return Ok_Pieces(true, NotStandardForm(s1, s2, s3));
