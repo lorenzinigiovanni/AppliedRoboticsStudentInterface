@@ -228,6 +228,13 @@ $ make
 $ source ../environment.sh
 ```
 
+Alternatively, run `prepare.sh` (before each run):
+
+```shell
+$ cd ~/workspace/project
+$ ./prepare.sh
+```
+
 # Execution
 
 Open three terminals.
