@@ -176,6 +176,7 @@ $ mv boost_1_77_0 boost
 Download Metric FF:
 
 ```shell
+$ cd ~
 $ wget https://fai.cs.uni-saarland.de/hoffmann/ff/Metric-FF-v2.1.tgz
 $ tar zxvf Metric-FF-v2.1.tgz
 $ rm Metric-FF-v2.1.tgz
@@ -186,6 +187,7 @@ Compile Metric FF and copy it in the project folder:
 
 ```shell
 $ sudo apt-get install build-essential flex bison
+$ cd ~/MetricFF
 $ make
 $ cp ff ~/workspace/project/src/pddl
 ```
