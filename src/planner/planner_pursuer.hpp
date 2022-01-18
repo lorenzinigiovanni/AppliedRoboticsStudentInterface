@@ -49,8 +49,9 @@ protected:
                 // Pursuer goes to the destination of the evader if it cannot reach it before
                 problem << "(= (evader-cost l" << evader_estimated_path[i] << ") 100000)" << std::endl;
             }
-            else if(i == 0)
+            else if (i == 0)
             {
+                // The current position of the evader should not be reached by the pursuer, as the evader will not be there anymore
                 problem << "(= (evader-cost l" << evader_estimated_path[i] << ") -1)" << std::endl;
             }
             else
