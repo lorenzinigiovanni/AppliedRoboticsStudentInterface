@@ -22,7 +22,7 @@ public:
     static constexpr float distance = 0.1;
 
     // Maximum curvature, critical maximum is 22
-    static constexpr double k_max = 15;
+    static constexpr double k_max = 20;
 
     // Absolute path to the workspace folder
     static std::string workspace_path;
