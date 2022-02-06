@@ -135,7 +135,7 @@ public:
         std::vector<Pose> pose_vect;
 
         // prepare parameter to get samples of the Dubins Arc with n points
-        double delta = 0.001;
+        double delta = 0.0001;
 
         // get vector of pose from a Dubins Arc
         // DubinsPoint pi = i;
